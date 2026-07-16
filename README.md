@@ -163,7 +163,7 @@ Provides administrators with complete visibility into system security and user a
 
 ---
 
-# 👥 User Roles
+#  User Roles
 
 ## Super Administrator
 
@@ -268,6 +268,6 @@ This project is developed as a **Mini Project** for the **Master of Computer App
 
 ---
 
-##  License
+## License
 
 This project is intended for academic and educational purposes.
