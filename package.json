@@ -1,0 +1,23 @@
+{
+  "name": "trustguard-ai",
+  "version": "1.0.0",
+  "description": "**Mini Project**  \r A web-based Zero Trust Security Platform that continuously verifies user identity, device trust, and access policies before granting access to organizational resources.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akshai-6055/trustguard-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akshai-6055/trustguard-ai/issues"
+  },
+  "homepage": "https://github.com/akshai-6055/trustguard-ai#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

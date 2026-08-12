@@ -52,18 +52,124 @@
 
 body {
   margin: 0;
+  background: radial-gradient(circle at top, #08101f 0%, #05070f 40%, #020207 100%);
+  color: #f8fafc;
+}
+
+.landing-shell {
+  background: transparent;
+}
+
+.hero-landing {
+  min-height: calc(100vh - 88px);
+  padding-top: 4.5rem;
+}
+
+.hero-overlay {
+  background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.25), transparent 26%),
+    radial-gradient(circle at 80% 25%, rgba(125, 211, 252, 0.16), transparent 20%),
+    linear-gradient(180deg, rgba(5, 6, 15, 0.9) 0%, rgba(2, 3, 7, 0.95) 100%);
+}
+
+.glass-card {
+  backdrop-filter: blur(18px);
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.hero-title {
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  letter-spacing: -0.06em;
+}
+
+.hero-copy {
+  max-width: 660px;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.hero-btn {
+  min-width: 170px;
+}
+
+.hero-card {
+  background: rgba(8, 17, 30, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.hero-card-inner {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 17, 30, 0.9));
+}
+
+.hero-card-glow {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.25), transparent 60%);
+  filter: blur(40px);
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.avatar-circle {
+  backdrop-filter: blur(10px);
+}
+
+.icon-box {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shadow-2xl {
+  box-shadow: 0 35px 120px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 991px) {
+  .hero-landing {
+    min-height: auto;
+    padding-top: 3rem;
+  }
+
+  .hero-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-title {
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
+  }
+
+  .hero-card-inner {
+    padding: 2rem 1.5rem;
+  }
+
+  .hero-card-glow {
+    display: none;
+  }
+}
+
+.feature-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.08);
+}
+
+.hero-visual {
+  background: radial-gradient(circle at top, rgba(13, 110, 253, 0.16), transparent 55%);
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 h1,

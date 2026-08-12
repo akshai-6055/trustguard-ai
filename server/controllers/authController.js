@@ -88,13 +88,14 @@ exports.login = async (req, res) => {
 
             const user = results[0];
 
-            // Step 3: Check Account Status
-            if (user.account_status !== "active") {
+            // Step 3: Check Account Status (case-insensitive check for 'active' or 'Active')
+            if (user.account_status && user.account_status.toLowerCase() !== "active") {
                 return res.status(403).json({
                     success: false,
                     message: "Account is inactive or suspended."
                 });
             }
+
 
             // Step 4: Compare Password
             const isMatch = await bcrypt.compare(password, user.password);
@@ -105,28 +106,36 @@ exports.login = async (req, res) => {
                 });
             }
 
-            // Step 5: Generate JWT Token
-            const tokenPayload = {
-                id: user.id,
-                email: user.email,
-                role_id: user.role_id
-            };
+            // Step 5: Fetch complete user with role details for token and response
+            userModel.findUserById(user.id, (userErr, userResults) => {
+                const fullUser = (userResults && userResults.length > 0) ? userResults[0] : user;
+                
+                const tokenPayload = {
+                    id: fullUser.id,
+                    email: fullUser.email,
+                    role_id: fullUser.role_id,
+                    role_name: fullUser.role_name || (fullUser.role_id === 1 ? "Administrator" : "Employee")
+                };
 
-            const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-                expiresIn: "1d"
-            });
+                const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+                    expiresIn: "1d"
+                });
 
-            // Step 6: Return Response with Token
-            return res.status(200).json({
-                success: true,
-                message: "Login successful.",
-                token,
-                user: {
-                    id: user.id,
-                    full_name: user.full_name,
-                    email: user.email,
-                    role_id: user.role_id
-                }
+                // Step 6: Return Response with Token
+                return res.status(200).json({
+                    success: true,
+                    message: "Login successful.",
+                    token,
+                    user: {
+                        id: fullUser.id,
+                        full_name: fullUser.full_name,
+                        email: fullUser.email,
+                        role_id: fullUser.role_id,
+                        role_name: fullUser.role_name || (fullUser.role_id === 1 ? "Administrator" : "Employee"),
+                        account_status: fullUser.account_status,
+                        created_at: fullUser.created_at
+                    }
+                });
             });
         });
 
@@ -158,5 +167,13 @@ exports.getProfile = (req, res) => {
             success: true,
             user: results[0]
         });
+    });
+};
+
+// Logout User
+exports.logout = (req, res) => {
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully."
     });
 };
