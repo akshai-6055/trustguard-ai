@@ -85,6 +85,15 @@ const ChangePassword = () => {
               </div>
             )}
 
+             {/* PASSWORD INFORMATION */}
+              <div className="alert alert-info rounded-3 small mb-4">
+                <i className="bi bi-shield-lock-fill me-2"></i>
+
+                To change your password, use the{" "}
+                <strong>Change Password</strong> option. Password
+                changes require verification of your current password.
+              </div>
+              
             <form onSubmit={handleSubmit}>
               {/* Current Password */}
               <div className="mb-3">
@@ -110,7 +119,6 @@ const ChangePassword = () => {
                   </button>
                 </div>
               </div>
-
               {/* New Password */}
               <div className="mb-3">
                 <label className="form-label small fw-semibold text-dark">New Password (Min 8 characters)</label>
