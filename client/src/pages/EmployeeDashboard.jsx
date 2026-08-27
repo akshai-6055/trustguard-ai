@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import dashboardService from "../services/dashboardService";
+import deviceService from "../services/deviceService";
 
 const EmployeeDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
+  const [userDevices, setUserDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -15,9 +17,17 @@ const EmployeeDashboard = () => {
     const fetchDashboard = async () => {
       try {
         setLoading(true);
-        const data = await dashboardService.getEmployeeDashboard();
-        if (data.success) {
-          setDashboardData(data.dashboard);
+        const [dashRes, devRes] = await Promise.allSettled([
+          dashboardService.getEmployeeDashboard(),
+          deviceService.getDevices()
+        ]);
+
+        if (dashRes.status === "fulfilled" && dashRes.value?.success) {
+          setDashboardData(dashRes.value.dashboard);
+        }
+
+        if (devRes.status === "fulfilled" && devRes.value?.success) {
+          setUserDevices(devRes.value.devices || []);
         }
       } catch (err) {
         setErrorMessage(err.response?.data?.message || "");
@@ -124,20 +134,28 @@ const EmployeeDashboard = () => {
             </Link>
 
             {/* Trusted Devices Link */}
-            <a
-              href="#trusted-devices"
+            <Link
+              to="/trusted-devices"
               className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
             >
               <i className="bi bi-laptop fs-5"></i> Trusted Devices
-            </a>
+            </Link>
 
-            {/* Resource Access Link */}
-            <a
-              href="#resource-access"
+            {/* Resource Access / Policy Link */}
+            <Link
+              to="/policies"
               className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
             >
               <i className="bi bi-key fs-5"></i> Resource Access
-            </a>
+            </Link>
+
+            {/* Continuous Authentication Link */}
+            <Link
+              to="/continuous-authentication"
+              className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
+            >
+              <i className="bi bi-shield-check fs-5"></i> Continuous Authentication
+            </Link>
 
             {/* Login History Link */}
             <a
@@ -234,12 +252,18 @@ const EmployeeDashboard = () => {
                     </div>
                     <div className="d-flex align-items-center gap-1">
                       <span className="p-1 bg-success rounded-circle"></span>
-                      <span className="fw-bold fs-3 text-dark">2</span>
+                      <span className="fw-bold fs-3 text-dark">
+                        {loading ? "..." : userDevices.filter((d) => d.status === "Trusted").length}
+                      </span>
                     </div>
                   </div>
                   <div>
                     <div className="fw-bold text-dark small mb-1">Trusted Devices</div>
-                    <span className="text-secondary" style={{ fontSize: "0.75rem" }}>2 Registered, 0 Pending Approval</span>
+                    <span className="text-secondary" style={{ fontSize: "0.75rem" }}>
+                      {loading
+                        ? "Loading devices..."
+                        : `${userDevices.length} Registered, ${userDevices.filter((d) => d.status === "Pending").length} Pending Approval`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -247,20 +271,31 @@ const EmployeeDashboard = () => {
 
             {/* Card 3: Accessible Resources */}
             <div className="col-12 col-sm-6 col-xl-3">
-              <div className="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-                <div className="card-body p-2 d-flex flex-column justify-content-between">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div className="rounded-3 p-2 d-flex align-items-center justify-content-center" style={{ background: "#fef3c7", color: "#d97706" }}>
-                      <i className="bi bi-key-fill fs-4"></i>
+              <Link to="/policies" className="text-decoration-none">
+                <div className="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+                  <div className="card-body p-2 d-flex flex-column justify-content-between">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <div className="rounded-3 p-2 d-flex align-items-center justify-content-center" style={{ background: "#fef3c7", color: "#d97706" }}>
+                        <i className="bi bi-key-fill fs-4"></i>
+                      </div>
+                      <span className="fw-bold fs-3 text-dark">
+                        <i className="bi bi-arrow-up-right fs-5 text-secondary"></i>
+                      </span>
                     </div>
-                    <span className="fw-bold fs-3 text-dark">12</span>
-                  </div>
-                  <div>
-                    <div className="fw-bold text-dark small mb-1">Accessible Resources</div>
-                    <span className="text-secondary" style={{ fontSize: "0.75rem" }}>12 Active permissions granted</span>
+                    <div>
+                      <div className="fw-bold text-dark small mb-1 d-flex align-items-center justify-content-between">
+                        <span>Resource Access</span>
+                        <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2" style={{ fontSize: "0.65rem" }}>
+                          View Policies
+                        </span>
+                      </div>
+                      <span className="text-secondary" style={{ fontSize: "0.75rem" }}>
+                        View PBAC security policies & permissions
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
             {/* Card 4: Security Alerts */}
@@ -369,49 +404,82 @@ const EmployeeDashboard = () => {
             <div className="col-lg-4">
               <div id="trusted-devices" className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
                 <div>
-                  <h5 className="fw-bold text-dark mb-3">Trusted Devices</h5>
-
-                  {/* Device Item 1 */}
-                  <div className="p-3 bg-light rounded-3 mb-3 border d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="rounded-3 p-2 bg-white text-primary border">
-                        <i className="bi bi-laptop fs-4" style={{ color: "#0047ab" }}></i>
-                      </div>
-                      <div>
-                        <div className="fw-bold text-dark small">Office Laptop</div>
-                        <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                          Chrome • <span className="text-success fw-medium">Trusted 98%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button className="btn btn-link text-secondary p-1">
-                      <i className="bi bi-gear"></i>
-                    </button>
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <h5 className="fw-bold text-dark mb-0">Trusted Devices</h5>
+                    <Link
+                      to="/trusted-devices"
+                      className="small fw-semibold text-decoration-none d-flex align-items-center gap-1"
+                      style={{ color: "#0047ab" }}
+                    >
+                      Manage Devices <i className="bi bi-arrow-right"></i>
+                    </Link>
                   </div>
 
-                  {/* Device Item 2 */}
-                  <div className="p-3 bg-light rounded-3 mb-3 border d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="rounded-3 p-2 bg-white text-primary border">
-                        <i className="bi bi-phone fs-4" style={{ color: "#0047ab" }}></i>
-                      </div>
-                      <div>
-                        <div className="fw-bold text-dark small">Work Phone</div>
-                        <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                          Native App • <span className="text-success fw-medium">Trusted 98%</span>
-                        </div>
-                      </div>
+                  {loading ? (
+                    <div className="text-center py-4">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
                     </div>
-                    <button className="btn btn-link text-secondary p-1">
-                      <i className="bi bi-gear"></i>
-                    </button>
-                  </div>
+                  ) : userDevices.length === 0 ? (
+                    <div className="p-3 bg-light rounded-3 text-center border mb-3">
+                      <p className="text-secondary small mb-1">No devices registered yet</p>
+                      <span className="text-muted" style={{ fontSize: "0.75rem" }}>
+                        Register your device to gain secure zero-trust access.
+                      </span>
+                    </div>
+                  ) : (
+                    userDevices.slice(0, 2).map((device) => {
+                      const isPhone =
+                        (device.os || "").toLowerCase().includes("phone") ||
+                        (device.os || "").toLowerCase().includes("android") ||
+                        (device.os || "").toLowerCase().includes("ios");
+                      const isDesktop = (device.os || "").toLowerCase().includes("windows") || (device.os || "").toLowerCase().includes("linux");
+
+                      return (
+                        <div
+                          key={device.id}
+                          className="p-3 bg-light rounded-3 mb-3 border d-flex align-items-center justify-content-between"
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="rounded-3 p-2 bg-white text-primary border">
+                              <i
+                                className={`bi ${isPhone ? "bi-phone" : isDesktop ? "bi-display" : "bi-laptop"} fs-4`}
+                                style={{ color: "#0047ab" }}
+                              ></i>
+                            </div>
+                            <div>
+                              <div className="fw-bold text-dark small">{device.device_name}</div>
+                              <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+                                {device.browser} •{" "}
+                                <span
+                                  className={
+                                    device.status === "Trusted"
+                                      ? "text-success fw-medium"
+                                      : device.status === "Pending"
+                                      ? "text-warning fw-medium"
+                                      : "text-danger fw-medium"
+                                  }
+                                >
+                                  {device.status} {device.trust_score}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <Link to="/trusted-devices" className="btn btn-link text-secondary p-1" title="Manage device">
+                            <i className="bi bi-gear"></i>
+                          </Link>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
 
                 {/* Add Device Button */}
-                <button className="btn border-dashed border-2 w-100 py-2 rounded-3 text-secondary small fw-semibold mt-3 bg-light text-center">
+                <Link
+                  to="/trusted-devices"
+                  className="btn border-dashed border-2 w-100 py-2 rounded-3 text-secondary small fw-semibold mt-3 bg-light text-center text-decoration-none d-block"
+                >
                   + Add Trusted Device
-                </button>
+                </Link>
               </div>
             </div>
           </div>

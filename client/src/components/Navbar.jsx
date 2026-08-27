@@ -45,22 +45,7 @@ const Navbar = ({ transparent }) => {
           <div className="d-flex align-items-center gap-3">
             {isAuthenticated ? (
               <div className="d-flex align-items-center gap-3">
-                {/* Dashboard link */}
-                <Link
-                  to={user?.role_id === 1 || user?.role_name?.toLowerCase() === "admin" || user?.role_name?.toLowerCase() === "administrator" ? "/admin/dashboard" : "/dashboard"}
-                  className={transparent ? "nav-link text-white fw-semibold" : "nav-link text-dark fw-semibold"}
-                >
-                  <i className="bi bi-speedometer2 me-1"></i> Dashboard
-                </Link>
-
-                {/* Profile link */}
-                <Link
-                  to="/profile"
-                  className={transparent ? "nav-link text-white fw-semibold" : "nav-link text-dark fw-semibold"}
-                >
-                  <i className="bi bi-person-circle me-1"></i> Profile
-                </Link>
-
+               
                 {/* User Avatar, Name & Role Badge */}
                 <div className="d-flex align-items-center gap-2 bg-light bg-opacity-75 px-3 py-1 rounded-pill border">
                   <div
