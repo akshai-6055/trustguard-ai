@@ -10,6 +10,8 @@ const Register = () => {
   const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Message states for user feedback
@@ -260,64 +262,88 @@ const Register = () => {
                   </div>
                 </div>
 
-                {/* Password and Confirm Password fields - side by side on larger screens */}
-                <div className="row g-2 mb-2">
-                  {/* Password input - takes 50% width on larger screens */}
-                  <div className="col-6">
-                    <label className="form-label small fw-semibold text-dark">Password</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0 text-muted">
-                        {/* Lock icon for password field */}
-                        <i className="bi bi-lock-fill"></i>
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control form-control-lg bg-light border-start-0 fs-6"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  {/* Confirm Password input - takes 50% width on larger screens */}
-                  <div className="col-6">
-                    <label className="form-label small fw-semibold text-dark">Confirm Password</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0 text-muted">
-                        {/* Lock icon for confirm password field */}
-                        <i className="bi bi-lock-fill"></i>
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control form-control-lg bg-light border-start-0 fs-6"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
+                {/* Password and Confirm Password fields */}
+<div className="row g-2 mb-2">
 
-                {/* Password strength indicator - shows only when user has entered a password */}
-                {password && (
-                  <div className="mb-3">
-                    <div className="d-flex justify-content-between align-items-center small mb-1">
-                      <span className="text-muted" style={{ fontSize: "0.75rem" }}>Password strength</span>
-                      {/* Display strength label (Weak, Medium, Strong) */}
-                      <span className="fw-bold text-primary" style={{ fontSize: "0.75rem" }}>{strength.label}</span>
-                    </div>
-                    {/* Progress bar showing password strength visually */}
-                    <div className="progress bg-light" style={{ height: "4px" }}>
-                      <div
-                        className={`progress-bar ${strength.color}`}
-                        role="progressbar"
-                        style={{ width: strength.width }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
+  {/* Password */}
+  <div className="col-6">
+    <label className="form-label small fw-semibold text-dark">
+      Password
+    </label>
+
+    <div className="input-group">
+      <span className="input-group-text bg-light border-end-0 text-muted">
+        <i className="bi bi-lock-fill"></i>
+      </span>
+
+      <input
+        type={showPassword ? "text" : "password"}
+        className="form-control form-control-lg bg-light border-start-0 border-end-0 fs-6"
+        placeholder="••••••••"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+
+      <button
+        type="button"
+        className="input-group-text bg-light border-start-0 text-muted"
+        onClick={() => setShowPassword((prev) => !prev)}
+        aria-label={showPassword ? "Hide password" : "Show password"}
+      >
+        <i
+          className={
+            showPassword
+              ? "bi bi-eye-slash-fill"
+              : "bi bi-eye-fill"
+          }
+        ></i>
+      </button>
+    </div>
+  </div>
+
+  {/* Confirm Password */}
+  <div className="col-6">
+    <label className="form-label small fw-semibold text-dark">
+      Confirm Password
+    </label>
+
+    <div className="input-group">
+      <span className="input-group-text bg-light border-end-0 text-muted">
+        <i className="bi bi-lock-fill"></i>
+      </span>
+
+      <input
+        type={showConfirmPassword ? "text" : "password"}
+        className="form-control form-control-lg bg-light border-start-0 border-end-0 fs-6"
+        placeholder="••••••••"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+      />
+
+      <button
+        type="button"
+        className="input-group-text bg-light border-start-0 text-muted"
+        onClick={() => setShowConfirmPassword((prev) => !prev)}
+        aria-label={
+          showConfirmPassword
+            ? "Hide confirm password"
+            : "Show confirm password"
+        }
+      >
+        <i
+          className={
+            showConfirmPassword
+              ? "bi bi-eye-slash-fill"
+              : "bi bi-eye-fill"
+          }
+        ></i>
+      </button>
+    </div>
+  </div>
+
+</div>
 
                 {/* Terms and Conditions checkbox */}
                 <div className="form-check mb-4 mt-3">
