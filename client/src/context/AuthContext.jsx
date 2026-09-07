@@ -1,6 +1,12 @@
-import  { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import axiosInstance from "../services/axiosInstance";
 
+import {
+    generateDeviceFingerprint,
+    getBrowserName,
+    getOSName,
+    getDeviceName
+} from "../utils/deviceFingerprint";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -44,22 +50,79 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login Function
-  const login = async (email, password) => {
+  // Login Function
+const login = async (email, password) => {
     try {
-      const response = await axiosInstance.post("/auth/login", { email, password });
-      if (response.data.success) {
-        const { token: newToken, user: userData } = response.data;
-        localStorage.setItem("token", newToken);
-        localStorage.setItem("user", JSON.stringify(userData));
-        setToken(newToken);
-        setUser(userData);
-        return { success: true, message: response.data.message, user: userData };
-      }
+
+        // Generate device information automatically
+        const fingerprint = await generateDeviceFingerprint();
+        const browser = getBrowserName();
+        const os = getOSName();
+        const device_name = getDeviceName();
+
+        console.log("Device Fingerprint:", fingerprint);
+        console.log("Browser:", browser);
+        console.log("OS:", os);
+
+        const response = await axiosInstance.post(
+            "/auth/login",
+            {
+                email,
+                password,
+                fingerprint,
+                browser,
+                os,
+                device_name
+            }
+        );
+
+        if (response.data.success) {
+
+            const {
+                token: newToken,
+                user: userData
+            } = response.data;
+
+            localStorage.setItem(
+                "token",
+                newToken
+            );
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify(userData)
+            );
+
+            setToken(newToken);
+            setUser(userData);
+
+            return {
+                success: true,
+                message: response.data.message,
+                user: userData,
+                device: response.data.device
+            };
+        }
+
+        return {
+            success: false,
+            message: response.data.message || "Login failed."
+        };
+
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
-      return { success: false, message: errorMessage };
+
+        console.error("Login error:", error);
+
+        const errorMessage =
+            error.response?.data?.message ||
+            "Login failed. Please try again.";
+
+        return {
+            success: false,
+            message: errorMessage
+        };
     }
-  };
+};
 
   // Register Function
   const register = async (userData) => {

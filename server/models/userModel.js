@@ -1,144 +1,356 @@
 const db = require("../config/db");
 
+// ============================================================
 // Find user by email
-const findUserByEmail = (email, callback) => {
+// ============================================================
+const findUserByEmail = async (email) => {
     const sql = "SELECT * FROM users WHERE email = ?";
 
-    db.query(sql, [email], callback);
+    console.log("🔍 Searching user by email:", email);
+
+    const [rows] = await db.query(sql, [email]);
+
+    console.log("✅ User query completed. Found:", rows.length);
+
+    return rows;
 };
 
+
+// ============================================================
 // Create new user
-const createUser = (user, callback) => {
+// ============================================================
+const createUser = async (user) => {
     const sql = `
         INSERT INTO users
         (full_name, email, password, role_id)
         VALUES (?, ?, ?, ?)
     `;
 
-    db.query(
+    const [result] = await db.query(
         sql,
-        [user.full_name, user.email, user.password, user.role_id],
-        callback
+        [
+            user.full_name,
+            user.email,
+            user.password,
+            user.role_id
+        ]
     );
+
+    return result;
 };
 
-// Find user by ID (including role_name)
-const findUserById = (id, callback) => {
+
+// ============================================================
+// Find user by ID including role name
+// ============================================================
+const findUserById = async (id) => {
     const sql = `
-        SELECT u.id, u.full_name, u.email, u.role_id, u.account_status, u.created_at, r.role_name
+        SELECT 
+            u.id,
+            u.full_name,
+            u.email,
+            u.role_id,
+            u.account_status,
+            u.created_at,
+            r.role_name
         FROM users u
         JOIN roles r ON u.role_id = r.id
         WHERE u.id = ?
     `;
 
-    db.query(sql, [id], callback);
+    const [rows] = await db.query(sql, [id]);
+
+    return rows;
 };
 
-// Find user by email excluding current user ID (for duplicate email validation)
-const findUserByEmailExcludingId = (email, userId, callback) => {
-    const sql = "SELECT * FROM users WHERE email = ? AND id != ?";
-    db.query(sql, [email, userId], callback);
+
+// ============================================================
+// Find user by email excluding current user ID
+// ============================================================
+const findUserByEmailExcludingId = async (email, userId) => {
+    const sql = `
+        SELECT *
+        FROM users
+        WHERE email = ?
+        AND id != ?
+    `;
+
+    const [rows] = await db.query(
+        sql,
+        [email, userId]
+    );
+
+    return rows;
 };
 
-// Update user profile (full_name, email)
-const updateUserProfile = (id, fullName, email, callback) => {
-    const sql = "UPDATE users SET full_name = ?, email = ? WHERE id = ?";
-    db.query(sql, [fullName, email, id], callback);
+
+// ============================================================
+// Update user profile
+// ============================================================
+const updateUserProfile = async (id, fullName, email) => {
+    const sql = `
+        UPDATE users
+        SET full_name = ?, email = ?
+        WHERE id = ?
+    `;
+
+    const [result] = await db.query(
+        sql,
+        [fullName, email, id]
+    );
+
+    return result;
 };
 
+
+// ============================================================
 // Get password by user ID
-const getUserPassword = (id, callback) => {
-    const sql = "SELECT password FROM users WHERE id = ?";
-    db.query(sql, [id], callback);
+// ============================================================
+const getUserPassword = async (id) => {
+    const sql = `
+        SELECT password
+        FROM users
+        WHERE id = ?
+    `;
+
+    const [rows] = await db.query(sql, [id]);
+
+    return rows;
 };
 
+
+// ============================================================
 // Update user password
-const updateUserPassword = (id, hashedPassword, callback) => {
-    const sql = "UPDATE users SET password = ? WHERE id = ?";
-    db.query(sql, [hashedPassword, id], callback);
+// ============================================================
+const updateUserPassword = async (id, hashedPassword) => {
+    const sql = `
+        UPDATE users
+        SET password = ?
+        WHERE id = ?
+    `;
+
+    const [result] = await db.query(
+        sql,
+        [hashedPassword, id]
+    );
+
+    return result;
 };
 
+
+// ============================================================
 // Get Employee Dashboard Data
-const getEmployeeDashboardData = (userId, callback) => {
-    findUserById(userId, (err, userResults) => {
-        if (err || !userResults || userResults.length === 0) {
-            return callback(err || new Error("User not found"));
-        }
+// ============================================================
+const getEmployeeDashboardData = async (userId) => {
 
-        const user = userResults[0];
+    // --------------------------------------------------------
+    // Get user information
+    // --------------------------------------------------------
+    const userResults = await findUserById(userId);
 
-        // Safe query for devices count (fallback to 1 if table empty or query fails)
-        db.query("SELECT COUNT(*) AS trusted_devices FROM devices WHERE user_id = ?", [userId], (devErr, devResults) => {
-            const trustedDevices = (!devErr && devResults && devResults.length > 0) ? devResults[0].trusted_devices : 1;
+    if (!userResults || userResults.length === 0) {
+        throw new Error("User not found");
+    }
 
-            // Safe query for last login
-            db.query("SELECT login_time, ip_address, device_info FROM login_history WHERE user_id = ? ORDER BY id DESC LIMIT 1", [userId], (logErr, logResults) => {
-                const lastLogin = (!logErr && logResults && logResults.length > 0) ? logResults[0] : { login_time: new Date(), ip_address: "127.0.0.1", device_info: "Current Web Browser" };
+    const user = userResults[0];
 
-                callback(null, {
-                    user,
-                    trustedDevices,
-                    lastLogin,
-                    currentSession: {
-                        status: "Active",
-                        ipAddress: "127.0.0.1",
-                        startedAt: new Date()
-                    },
-                    accountStatus: user.account_status || "active"
-                });
-            });
-        });
-    });
+
+    // --------------------------------------------------------
+    // Get trusted device count
+    // --------------------------------------------------------
+    const [devResults] = await db.query(
+        `
+        SELECT COUNT(*) AS trusted_devices
+        FROM devices
+        WHERE user_id = ?
+        `,
+        [userId]
+    );
+
+    const trustedDevices =
+        devResults.length > 0
+            ? devResults[0].trusted_devices
+            : 0;
+
+
+    // --------------------------------------------------------
+    // Get latest login information
+    //
+    // login_history table columns:
+    // id
+    // user_id
+    // device_name
+    // browser
+    // location
+    // login_time
+    // status
+    // --------------------------------------------------------
+    const [logResults] = await db.query(
+        `
+        SELECT
+            login_time,
+            device_name,
+            browser,
+            location,
+            status
+        FROM login_history
+        WHERE user_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+        `,
+        [userId]
+    );
+
+
+    // --------------------------------------------------------
+    // If no login history exists, use fallback information
+    // --------------------------------------------------------
+    const lastLogin =
+        logResults.length > 0
+            ? logResults[0]
+            : {
+                login_time: new Date(),
+                device_name: "Current Device",
+                browser: "Current Browser",
+                location: "Unknown",
+                status: "Success"
+            };
+
+
+    // --------------------------------------------------------
+    // Return dashboard data
+    // --------------------------------------------------------
+    return {
+        user,
+        trustedDevices,
+        lastLogin,
+
+        currentSession: {
+            status: "Active",
+            ipAddress: "127.0.0.1",
+            startedAt: new Date()
+        },
+
+        accountStatus: user.account_status || "Active"
+    };
 };
 
-// Get Admin Dashboard Data
-const getAdminDashboardData = (callback) => {
-    const totalUsersSql = "SELECT COUNT(*) AS count FROM users";
-    const activeUsersSql = "SELECT COUNT(*) AS count FROM users WHERE LOWER(account_status) = 'active'";
-    const blockedUsersSql = "SELECT COUNT(*) AS count FROM users WHERE LOWER(account_status) != 'active'";
 
+// ============================================================
+// Get Admin Dashboard Data
+// ============================================================
+const getAdminDashboardData = async () => {
+
+    // --------------------------------------------------------
+    // Total users
+    // --------------------------------------------------------
+    const [totalUsersResult] = await db.query(
+        `
+        SELECT COUNT(*) AS count
+        FROM users
+        `
+    );
+
+
+    // --------------------------------------------------------
+    // Active users
+    // --------------------------------------------------------
+    const [activeUsersResult] = await db.query(
+        `
+        SELECT COUNT(*) AS count
+        FROM users
+        WHERE LOWER(account_status) = 'active'
+        `
+    );
+
+
+    // --------------------------------------------------------
+    // Blocked / inactive users
+    // --------------------------------------------------------
+    const [blockedUsersResult] = await db.query(
+        `
+        SELECT COUNT(*) AS count
+        FROM users
+        WHERE LOWER(account_status) != 'active'
+        `
+    );
+
+
+    // --------------------------------------------------------
+    // Recent registered users
+    // --------------------------------------------------------
     const recentUsersSql = `
-        SELECT u.id, u.full_name, u.email, u.account_status, u.created_at, r.role_name
+        SELECT
+            u.id,
+            u.full_name,
+            u.email,
+            u.account_status,
+            u.created_at,
+            r.role_name
         FROM users u
         JOIN roles r ON u.role_id = r.id
-        ORDER BY u.id DESC LIMIT 5
+        ORDER BY u.id DESC
+        LIMIT 5
     `;
+
+
+    // --------------------------------------------------------
+    // Latest login activity
+    //
+    // Uses the ACTUAL login_history table columns.
+    // --------------------------------------------------------
     const latestLoginActivitySql = `
-        SELECT lh.id, u.full_name, u.email, lh.login_time, lh.ip_address, lh.status
+        SELECT
+            lh.id,
+            u.full_name,
+            u.email,
+            lh.login_time,
+            lh.device_name,
+            lh.browser,
+            lh.location,
+            lh.status
         FROM login_history lh
-        JOIN users u ON lh.user_id = u.id
-        ORDER BY lh.id DESC LIMIT 5
+        JOIN users u
+            ON lh.user_id = u.id
+        ORDER BY lh.id DESC
+        LIMIT 5
     `;
 
-    db.query(totalUsersSql, (err1, res1) => {
-        const totalUsers = (!err1 && res1 && res1.length > 0) ? res1[0].count : 0;
 
-        db.query(activeUsersSql, (err2, res2) => {
-            const activeUsers = (!err2 && res2 && res2.length > 0) ? res2[0].count : 0;
+    // --------------------------------------------------------
+    // Execute recent users query
+    // --------------------------------------------------------
+    const [recentUsers] = await db.query(
+        recentUsersSql
+    );
 
-            db.query(blockedUsersSql, (err3, res3) => {
-                const blockedUsers = (!err3 && res3 && res3.length > 0) ? res3[0].count : 0;
 
-                db.query(recentUsersSql, (err4, res4) => {
-                    const recentRegistrations = (!err4 && res4) ? res4 : [];
+    // --------------------------------------------------------
+    // Execute latest login activity query
+    // --------------------------------------------------------
+    const [latestLoginActivity] = await db.query(
+        latestLoginActivitySql
+    );
 
-                    db.query(latestLoginActivitySql, (err5, res5) => {
-                        const latestLoginActivity = (!err5 && res5) ? res5 : [];
 
-                        callback(null, {
-                            totalUsers,
-                            activeUsers,
-                            blockedUsers,
-                            recentRegistrations,
-                            latestLoginActivity
-                        });
-                    });
-                });
-            });
-        });
-    });
+    // --------------------------------------------------------
+    // Return admin dashboard data
+    // --------------------------------------------------------
+    return {
+        totalUsers: totalUsersResult[0].count,
+        activeUsers: activeUsersResult[0].count,
+        blockedUsers: blockedUsersResult[0].count,
+
+        recentRegistrations: recentUsers,
+
+        latestLoginActivity
+    };
 };
 
+
+// ============================================================
+// Export all functions
+// ============================================================
 module.exports = {
     findUserByEmail,
     createUser,
@@ -149,4 +361,4 @@ module.exports = {
     updateUserPassword,
     getEmployeeDashboardData,
     getAdminDashboardData
-};
+};
