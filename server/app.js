@@ -9,6 +9,9 @@ require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const deviceRoutes = require("./routes/deviceRoutes");
+const policyRoutes = require("./routes/policyRoutes");
+const continuousAuthRoutes = require("./routes/continuousAuthRoutes");
 
 const app = express();
 
@@ -21,7 +24,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/devices", deviceRoutes);
+app.use("/api/policies", policyRoutes);
+app.use("/api/continuous-auth", continuousAuthRoutes);
 app.get("/", (req, res) => {
     res.send("TrustGuard AI Backend Running...");
 });
