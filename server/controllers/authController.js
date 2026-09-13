@@ -23,10 +23,12 @@ exports.register = async (req, res) => {
             });
         }
 
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanFullName = full_name.trim();
 
         // Check existing email
         const existingUsers =
-            await userModel.findUserByEmail(email);
+            await userModel.findUserByEmail(cleanEmail);
 
 
         if (existingUsers.length > 0) {
@@ -43,10 +45,10 @@ exports.register = async (req, res) => {
 
 
         const newUser = {
-            full_name,
-            email,
+            full_name: cleanFullName,
+            email: cleanEmail,
             password: hashedPassword,
-            role_id
+            role_id: Number(role_id)
         };
 
 
@@ -54,7 +56,7 @@ exports.register = async (req, res) => {
         await userModel.createUser(newUser);
 
 
-        console.log("✅ User registered:", email);
+        console.log("✅ User registered:", cleanEmail);
 
 
         return res.status(201).json({
@@ -101,13 +103,14 @@ exports.login = async (req, res) => {
             });
         }
 
+        const cleanEmail = email.trim().toLowerCase();
 
         // =====================================================
         // STEP 2: FIND USER
         // =====================================================
 
         const results =
-            await userModel.findUserByEmail(email);
+            await userModel.findUserByEmail(cleanEmail);
 
 
         if (!results || results.length === 0) {

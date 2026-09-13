@@ -18,7 +18,8 @@ const Login = () => {
     setErrorMessage("");
     setLoading(true);
 
-    const result = await login(email, password);
+    const cleanEmail = email.trim().toLowerCase();
+    const result = await login(cleanEmail, password);
     setLoading(false);
 
     if (result.success) {

@@ -73,10 +73,13 @@ exports.updateProfile = async (req, res) => {
         }
 
 
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanFullName = full_name.trim();
+
         // Check duplicate email
         const existingUsers =
             await userModel.findUserByEmailExcludingId(
-                email.trim(),
+                cleanEmail,
                 userId
             );
 
@@ -95,8 +98,8 @@ exports.updateProfile = async (req, res) => {
         // Update profile
         await userModel.updateUserProfile(
             userId,
-            full_name.trim(),
-            email.trim()
+            cleanFullName,
+            cleanEmail
         );
 
 

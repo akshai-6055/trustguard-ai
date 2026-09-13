@@ -338,7 +338,7 @@ const recognizeDevice = async (
     // New devices should normally be Pending
     let status = "Pending";
 
-    if (trustScore < 50) {
+    if (!accountActive) {
         status = "Blocked";
     }
 

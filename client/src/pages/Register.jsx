@@ -86,9 +86,12 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanFullName = fullName.trim();
+
     const userData = {
-      full_name: fullName,
-      email,
+      full_name: cleanFullName,
+      email: cleanEmail,
       password,
       role_id: department === "Admin" ? 1 : 2 // Map role to DB role_id
     };
@@ -257,7 +260,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                     >
                       <option value="">Select department</option>
                       <option value="Admin">Admin</option>
-                      <option value="Security">Employee</option>
+                      <option value="Employee">Employee</option>
                     </select>
                   </div>
                 </div>

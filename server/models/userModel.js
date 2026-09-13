@@ -4,11 +4,12 @@ const db = require("../config/db");
 // Find user by email
 // ============================================================
 const findUserByEmail = async (email) => {
-    const sql = "SELECT * FROM users WHERE email = ?";
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const sql = "SELECT * FROM users WHERE LOWER(TRIM(email)) = ?";
 
-    console.log("🔍 Searching user by email:", email);
+    console.log("🔍 Searching user by email:", cleanEmail);
 
-    const [rows] = await db.query(sql, [email]);
+    const [rows] = await db.query(sql, [cleanEmail]);
 
     console.log("✅ User query completed. Found:", rows.length);
 
@@ -26,11 +27,14 @@ const createUser = async (user) => {
         VALUES (?, ?, ?, ?)
     `;
 
+    const cleanFullName = user.full_name ? user.full_name.trim() : "";
+    const cleanEmail = user.email ? user.email.trim().toLowerCase() : "";
+
     const [result] = await db.query(
         sql,
         [
-            user.full_name,
-            user.email,
+            cleanFullName,
+            cleanEmail,
             user.password,
             user.role_id
         ]
@@ -68,16 +72,17 @@ const findUserById = async (id) => {
 // Find user by email excluding current user ID
 // ============================================================
 const findUserByEmailExcludingId = async (email, userId) => {
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
     const sql = `
         SELECT *
         FROM users
-        WHERE email = ?
+        WHERE LOWER(TRIM(email)) = ?
         AND id != ?
     `;
 
     const [rows] = await db.query(
         sql,
-        [email, userId]
+        [cleanEmail, userId]
     );
 
     return rows;
@@ -88,6 +93,8 @@ const findUserByEmailExcludingId = async (email, userId) => {
 // Update user profile
 // ============================================================
 const updateUserProfile = async (id, fullName, email) => {
+    const cleanFullName = fullName ? fullName.trim() : "";
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
     const sql = `
         UPDATE users
         SET full_name = ?, email = ?
@@ -96,7 +103,7 @@ const updateUserProfile = async (id, fullName, email) => {
 
     const [result] = await db.query(
         sql,
-        [fullName, email, id]
+        [cleanFullName, cleanEmail, id]
     );
 
     return result;
