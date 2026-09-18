@@ -12,6 +12,14 @@ import TrustedDevices from "./pages/TrustedDevices.jsx";
 import PolicyManagement from "./pages/PolicyManagement.jsx";
 import ContinuousAuthentication from "./pages/ContinuousAuthentication.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminLogin from "./pages/admin/AdminLogin.jsx";
+import UserManagement from "./pages/admin/UserManagement.jsx";
+import UserDetails from "./pages/admin/UserDetails.jsx";
+import DeviceManagement from "./pages/admin/DeviceManagement.jsx";
+import AdminPolicyManagement from "./pages/admin/AdminPolicyManagement.jsx";
+import AdminContinuousAuth from "./pages/admin/ContinuousAuthentication.jsx";
+import SecurityAlerts from "./pages/admin/SecurityAlerts.jsx";
+import AuditLogs from "./pages/admin/AuditLogs.jsx";
 
 function App() {
   return (
@@ -19,6 +27,7 @@ function App() {
       {/* Public Pages */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/register" element={<Register />} />
 
       {/* Protected Employee Dashboard Route */}
@@ -31,12 +40,68 @@ function App() {
         }
       />
 
-      {/* Protected Admin Dashboard Route */}
+      {/* Protected Admin Routes */}
       <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users/:id"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <UserDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/devices"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <DeviceManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/policies"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <AdminPolicyManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/continuous-authentication"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <AdminContinuousAuth />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/security-alerts"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <SecurityAlerts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/audit-logs"
+        element={
+          <ProtectedRoute allowedRoles={[1, "Administrator", "Admin"]}>
+            <AuditLogs />
           </ProtectedRoute>
         }
       />
