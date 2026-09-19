@@ -318,6 +318,117 @@ exports.login = async (req, res) => {
         });
     }
 };
+
+// Admin Login
+exports.adminLogin = async (req, res) => {
+    try {
+        const { email, password, fingerprint, browser, os, device_name } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        const cleanEmail = email.trim().toLowerCase();
+
+        const results = await userModel.findUserByEmail(cleanEmail);
+
+        if (!results || results.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        const user = results[0];
+
+        if (user.account_status && user.account_status.toLowerCase() !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is currently blocked. Please contact the administrator."
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        const userResults = await userModel.findUserById(user.id);
+        const fullUser = userResults && userResults.length > 0 ? userResults[0] : user;
+
+        const roleName = fullUser.role_name || (fullUser.role_id === 1 ? "Admin" : "Employee");
+
+        // Explicitly check for Admin role
+        if (fullUser.role_id !== 1 && roleName.toLowerCase() !== "admin" && roleName.toLowerCase() !== "administrator") {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. Administrator privileges are required."
+            });
+        }
+
+        let deviceResult = null;
+
+        if (fingerprint) {
+            deviceResult = await deviceModel.recognizeDevice(
+                fullUser.id,
+                device_name || "Web Device",
+                browser || "Unknown Browser",
+                os || "Unknown OS",
+                fingerprint,
+                true
+            );
+
+            if (deviceResult.status === "Blocked") {
+                return res.status(403).json({
+                    success: false,
+                    message: "This device is blocked.",
+                    device: deviceResult
+                });
+            }
+        }
+
+        const tokenPayload = {
+            id: fullUser.id,
+            email: fullUser.email,
+            role_id: fullUser.role_id,
+            role_name: roleName
+        };
+
+        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+            expiresIn: "1d"
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Admin login successful.",
+            token,
+            user: {
+                id: fullUser.id,
+                full_name: fullUser.full_name,
+                email: fullUser.email,
+                role_id: fullUser.role_id,
+                role_name: roleName,
+                account_status: fullUser.account_status,
+                created_at: fullUser.created_at
+            },
+            device: deviceResult
+        });
+    } catch (error) {
+        console.error("Admin Login error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Login failed due to server error.",
+            error: error.message
+        });
+    }
+};
 // Get User Profile (Protected Route)
 exports.getProfile = async (req, res) => {
     try {
