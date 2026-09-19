@@ -339,6 +339,30 @@ const getAdminDashboardData = async () => {
         latestLoginActivitySql
     );
 
+    // --------------------------------------------------------
+    // Devices metrics
+    // --------------------------------------------------------
+    const [totalDevicesResult] = await db.query(
+        `SELECT COUNT(*) AS count FROM devices`
+    );
+
+    const [trustedDevicesResult] = await db.query(
+        `SELECT COUNT(*) AS count FROM devices WHERE status = 'Trusted'`
+    );
+
+    const [untrustedDevicesResult] = await db.query(
+        `SELECT COUNT(*) AS count FROM devices WHERE status != 'Trusted'`
+    );
+
+    // --------------------------------------------------------
+    // Login metrics
+    // --------------------------------------------------------
+    const [failedLoginsResult] = await db.query(
+        `SELECT COUNT(*) AS count FROM login_history WHERE status != 'Success'`
+    );
+
+    // Mock active sessions as we don't have a sessions table
+    const activeSessions = Math.max(0, Math.floor(activeUsersResult[0].count * 0.75));
 
     // --------------------------------------------------------
     // Return admin dashboard data
@@ -347,6 +371,13 @@ const getAdminDashboardData = async () => {
         totalUsers: totalUsersResult[0].count,
         activeUsers: activeUsersResult[0].count,
         blockedUsers: blockedUsersResult[0].count,
+        
+        totalDevices: totalDevicesResult[0].count,
+        trustedDevices: trustedDevicesResult[0].count,
+        untrustedDevices: untrustedDevicesResult[0].count,
+        
+        failedLogins: failedLoginsResult[0].count,
+        activeSessions,
 
         recentRegistrations: recentUsers,
 
@@ -354,6 +385,40 @@ const getAdminDashboardData = async () => {
     };
 };
 
+
+// ============================================================
+// Get all users (Admin)
+// ============================================================
+const getAllUsers = async () => {
+    const sql = `
+        SELECT 
+            u.id,
+            u.full_name,
+            u.email,
+            u.role_id,
+            u.account_status,
+            u.created_at,
+            r.role_name
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        ORDER BY u.id DESC
+    `;
+    const [rows] = await db.query(sql);
+    return rows;
+};
+
+// ============================================================
+// Update user status (Admin)
+// ============================================================
+const updateUserStatus = async (userId, status) => {
+    const sql = `
+        UPDATE users
+        SET account_status = ?
+        WHERE id = ?
+    `;
+    const [result] = await db.query(sql, [status, userId]);
+    return result;
+};
 
 // ============================================================
 // Export all functions
@@ -367,5 +432,7 @@ module.exports = {
     getUserPassword,
     updateUserPassword,
     getEmployeeDashboardData,
-    getAdminDashboardData
+    getAdminDashboardData,
+    getAllUsers,
+    updateUserStatus
 };

@@ -380,6 +380,53 @@ const recognizeDevice = async (
     };
 };
 
+// ============================================================
+// Admin Methods
+// ============================================================
+
+// Get all devices (Admin)
+const getAllDevices = async () => {
+    const [rows] = await db.execute(
+        `SELECT
+            d.id,
+            d.user_id,
+            u.full_name,
+            u.email,
+            d.device_name,
+            d.browser,
+            d.os,
+            d.fingerprint,
+            d.trust_score,
+            d.status,
+            d.last_used
+         FROM devices d
+         LEFT JOIN users u ON d.user_id = u.id
+         ORDER BY d.last_used DESC`
+    );
+    return rows;
+};
+
+// Update device status (Admin)
+const updateDeviceStatusAdmin = async (deviceId, status) => {
+    const [result] = await db.execute(
+        `UPDATE devices
+         SET status = ?
+         WHERE id = ?`,
+        [status, deviceId]
+    );
+    return result;
+};
+
+// Delete a device (Admin)
+const deleteDeviceAdmin = async (deviceId) => {
+    const [result] = await db.execute(
+        `DELETE FROM devices
+         WHERE id = ?`,
+        [deviceId]
+    );
+    return result;
+};
+
 module.exports = {
     getDevicesByUserId,
     getDeviceById,
@@ -390,5 +437,9 @@ module.exports = {
     findDeviceByFingerprint,
     calculateTrustScore,
     getTrustStatus,
-    recognizeDevice
+    recognizeDevice,
+    
+    getAllDevices,
+    updateDeviceStatusAdmin,
+    deleteDeviceAdmin
 };
