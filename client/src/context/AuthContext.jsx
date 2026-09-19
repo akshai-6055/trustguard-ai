@@ -123,6 +123,46 @@ const login = async (email, password) => {
         };
     }
 };
+// Admin Login Function
+const adminLogin = async (email, password) => {
+    try {
+        const fingerprint = await generateDeviceFingerprint();
+        const browser = getBrowserName();
+        const os = getOSName();
+        const device_name = getDeviceName();
+
+        const response = await axiosInstance.post(
+            "/auth/admin-login",
+            { email, password, fingerprint, browser, os, device_name }
+        );
+
+        if (response.data.success) {
+            const { token: newToken, user: userData } = response.data;
+            localStorage.setItem("token", newToken);
+            localStorage.setItem("user", JSON.stringify(userData));
+            setToken(newToken);
+            setUser(userData);
+            return {
+                success: true,
+                message: response.data.message,
+                user: userData,
+                device: response.data.device
+            };
+        }
+        return {
+            success: false,
+            message: response.data.message || "Admin Login failed."
+        };
+    } catch (error) {
+        console.error("Admin Login error:", error);
+        const errorMessage = error.response?.data?.message || "Admin Login failed. Please try again.";
+        return {
+            success: false,
+            message: errorMessage
+        };
+    }
+};
+
 
   // Register Function
   const register = async (userData) => {
@@ -156,6 +196,7 @@ const login = async (email, password) => {
         loading,
         isAuthenticated: !!token && !!user,
         login,
+        adminLogin,
         register,
         logout,
         updateUser
