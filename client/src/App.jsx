@@ -17,7 +17,7 @@ import UserManagement from "./pages/admin/UserManagement.jsx";
 import UserDetails from "./pages/admin/UserDetails.jsx";
 import DeviceManagement from "./pages/admin/DeviceManagement.jsx";
 import AdminPolicyManagement from "./pages/admin/AdminPolicyManagement.jsx";
-import AdminContinuousAuth from "./pages/admin/ContinuousAuthentication.jsx";
+import AdminContinuousAuth from "./pages/admin/AdminContinuousAuthentication.jsx";
 import SecurityAlerts from "./pages/admin/SecurityAlerts.jsx";
 import AuditLogs from "./pages/admin/AuditLogs.jsx";
 
