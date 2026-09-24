@@ -14,7 +14,10 @@ router.get("/dashboard", adminController.getDashboard);
 // User Management Routes
 router.get("/users", adminController.getAllUsers);
 router.get("/users/:id", adminController.getUserById);
+router.post("/users", adminController.createUser);
+router.put("/users/:id", adminController.updateUser);
 router.put("/users/:id/status", adminController.updateUserStatus);
+router.delete("/users/:id", adminController.deleteUser);
 
 // Device Management Routes
 router.get("/devices", adminController.getAllDevices);

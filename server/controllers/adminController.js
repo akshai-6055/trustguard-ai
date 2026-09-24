@@ -1,5 +1,5 @@
 const userModel = require("../models/userModel");
-
+const bcrypt = require("bcrypt");
 // Get Admin Dashboard Data
 exports.getDashboard = async (req, res) => {
     try {
@@ -56,6 +56,78 @@ exports.updateUserStatus = async (req, res) => {
         return res.status(200).json({ success: true, message: `User status updated to ${status}.` });
     } catch (err) {
         return res.status(500).json({ success: false, message: "Failed to update user status.", error: err.message });
+    }
+};
+
+exports.createUser = async (req, res) => {
+    try {
+        const { full_name, email, password, role_id } = req.body;
+        
+        if (!full_name || !email || !password || !role_id) {
+            return res.status(400).json({ success: false, message: "All fields are required." });
+        }
+        
+        // Check if user already exists
+        const existingUsers = await userModel.findUserByEmail(email);
+        if (existingUsers && existingUsers.length > 0) {
+            return res.status(400).json({ success: false, message: "Email already exists." });
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const newUser = {
+            full_name,
+            email,
+            password: hashedPassword,
+            role_id: Number(role_id)
+        };
+        
+        const result = await userModel.createUser(newUser);
+        return res.status(201).json({ success: true, message: "User created successfully.", userId: result.insertId });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to create user.", error: err.message });
+    }
+};
+
+exports.updateUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { full_name, email, role_id, account_status, password } = req.body;
+        
+        if (!full_name || !email || !role_id || !account_status) {
+            return res.status(400).json({ success: false, message: "Required fields are missing." });
+        }
+        
+        const existingUsers = await userModel.findUserByEmailExcludingId(email, userId);
+        if (existingUsers && existingUsers.length > 0) {
+            return res.status(400).json({ success: false, message: "Email already in use." });
+        }
+        
+        const updatedUser = {
+            full_name,
+            email,
+            role_id: Number(role_id),
+            account_status
+        };
+        
+        if (password) {
+            updatedUser.password = await bcrypt.hash(password, 10);
+        }
+        
+        await userModel.updateUserAdmin(userId, updatedUser);
+        return res.status(200).json({ success: true, message: "User updated successfully." });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to update user.", error: err.message });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        await userModel.deleteUser(userId);
+        return res.status(200).json({ success: true, message: "User deleted successfully." });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to delete user.", error: err.message });
     }
 };
 
