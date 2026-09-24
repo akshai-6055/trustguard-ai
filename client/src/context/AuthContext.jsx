@@ -60,9 +60,43 @@ const login = async (email, password) => {
         const os = getOSName();
         const device_name = getDeviceName();
 
+        let location = "Unknown";
+        try {
+            const coords = await new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                    (err) => resolve(null),
+                    { timeout: 5000 }
+                );
+            });
+
+            if (coords) {
+                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`);
+                const osmData = await osmRes.json();
+                if (osmData && osmData.address) {
+                    const city = osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || "";
+                    const state = osmData.address.state || "";
+                    location = [city, state].filter(Boolean).join(", ");
+                }
+            }
+
+            if (!location || location === "Unknown" || location.trim() === "") {
+                const locRes = await fetch("https://ipinfo.io/json");
+                const locData = await locRes.json();
+                if (locData.city && locData.region) {
+                    location = `${locData.city}, ${locData.region}`;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch location", e);
+            if (!location || location === "") location = "Unknown";
+        }
+
         console.log("Device Fingerprint:", fingerprint);
         console.log("Browser:", browser);
         console.log("OS:", os);
+        console.log("Location:", location);
 
         const response = await axiosInstance.post(
             "/auth/login",
@@ -72,7 +106,8 @@ const login = async (email, password) => {
                 fingerprint,
                 browser,
                 os,
-                device_name
+                device_name,
+                location
             }
         );
 
@@ -131,9 +166,42 @@ const adminLogin = async (email, password) => {
         const os = getOSName();
         const device_name = getDeviceName();
 
+        let location = "Unknown";
+        try {
+            const coords = await new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                    (err) => resolve(null),
+                    { timeout: 5000 }
+                );
+            });
+
+            if (coords) {
+                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`);
+                const osmData = await osmRes.json();
+                if (osmData && osmData.address) {
+                    const city = osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || "";
+                    const state = osmData.address.state || "";
+                    location = [city, state].filter(Boolean).join(", ");
+                }
+            }
+
+            if (!location || location === "Unknown" || location.trim() === "") {
+                const locRes = await fetch("https://ipinfo.io/json");
+                const locData = await locRes.json();
+                if (locData.city && locData.region) {
+                    location = `${locData.city}, ${locData.region}`;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch location", e);
+            if (!location || location === "") location = "Unknown";
+        }
+
         const response = await axiosInstance.post(
             "/auth/admin-login",
-            { email, password, fingerprint, browser, os, device_name }
+            { email, password, fingerprint, browser, os, device_name, location }
         );
 
         if (response.data.success) {

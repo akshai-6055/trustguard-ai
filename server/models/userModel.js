@@ -203,7 +203,7 @@ const getEmployeeDashboardData = async (userId) => {
         FROM login_history
         WHERE user_id = ?
         ORDER BY id DESC
-        LIMIT 1
+        LIMIT 5
         `,
         [userId]
     );
@@ -223,6 +223,8 @@ const getEmployeeDashboardData = async (userId) => {
                 status: "Success"
             };
 
+    const recentActivity = logResults;
+
 
     // --------------------------------------------------------
     // Return dashboard data
@@ -231,6 +233,7 @@ const getEmployeeDashboardData = async (userId) => {
         user,
         trustedDevices,
         lastLogin,
+        recentActivity,
 
         currentSession: {
             status: "Active",
@@ -317,7 +320,7 @@ const getAdminDashboardData = async () => {
             lh.location,
             lh.status
         FROM login_history lh
-        JOIN users u
+        LEFT JOIN users u
             ON lh.user_id = u.id
         ORDER BY lh.id DESC
         LIMIT 5
@@ -421,6 +424,55 @@ const updateUserStatus = async (userId, status) => {
 };
 
 // ============================================================
+// Update user details (Admin)
+// ============================================================
+const updateUserAdmin = async (userId, user) => {
+    const cleanFullName = user.full_name ? user.full_name.trim() : "";
+    const cleanEmail = user.email ? user.email.trim().toLowerCase() : "";
+    
+    let sql = `
+        UPDATE users
+        SET full_name = ?, email = ?, role_id = ?, account_status = ?
+    `;
+    const params = [cleanFullName, cleanEmail, user.role_id, user.account_status];
+    
+    if (user.password) {
+        sql += `, password = ?`;
+        params.push(user.password);
+    }
+    
+    sql += ` WHERE id = ?`;
+    params.push(userId);
+    
+    const [result] = await db.query(sql, params);
+    return result;
+};
+
+// ============================================================
+// Delete user (Admin)
+// ============================================================
+const deleteUser = async (userId) => {
+    const sql = `
+        DELETE FROM users
+        WHERE id = ?
+    `;
+    const [result] = await db.query(sql, [userId]);
+    return result;
+};
+
+// ============================================================
+// Log login attempt
+// ============================================================
+const logLoginAttempt = async (userId, deviceName, browser, status, location = 'Unknown') => {
+    const sql = `
+        INSERT INTO login_history (user_id, device_name, browser, location, login_time, status)
+        VALUES (?, ?, ?, ?, NOW(), ?)
+    `;
+    const [result] = await db.query(sql, [userId || null, deviceName || 'Unknown Device', browser || 'Unknown Browser', location || 'Unknown', status]);
+    return result;
+};
+
+// ============================================================
 // Export all functions
 // ============================================================
 module.exports = {
@@ -434,5 +486,8 @@ module.exports = {
     getEmployeeDashboardData,
     getAdminDashboardData,
     getAllUsers,
-    updateUserStatus
+    updateUserStatus,
+    updateUserAdmin,
+    deleteUser,
+    logLoginAttempt
 };

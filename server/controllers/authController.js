@@ -87,7 +87,8 @@ exports.login = async (req, res) => {
             fingerprint,
             browser,
             os,
-            device_name
+            device_name,
+            location
         } = req.body;
 
 
@@ -112,9 +113,8 @@ exports.login = async (req, res) => {
         const results =
             await userModel.findUserByEmail(cleanEmail);
 
-
         if (!results || results.length === 0) {
-
+            await userModel.logLoginAttempt(null, device_name, browser, "Failed", location);
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password."
@@ -139,7 +139,7 @@ exports.login = async (req, res) => {
             user.account_status &&
             user.account_status.toLowerCase() !== "active"
         ) {
-
+            await userModel.logLoginAttempt(user.id, device_name, browser, "Blocked", location);
             return res.status(403).json({
                 success: false,
                 message: "Account is inactive or blocked."
@@ -157,9 +157,8 @@ exports.login = async (req, res) => {
                 user.password
             );
 
-
         if (!isMatch) {
-
+            await userModel.logLoginAttempt(user.id, device_name, browser, "Failed", location);
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password."
@@ -211,7 +210,7 @@ exports.login = async (req, res) => {
             if (
                 deviceResult.status === "Blocked"
             ) {
-
+                await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Blocked", location);
                 return res.status(403).json({
                     success: false,
                     message:
@@ -260,6 +259,7 @@ exports.login = async (req, res) => {
         // =====================================================
         // STEP 8: LOGIN RESPONSE
         // =====================================================
+        await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Success", location);
 
         console.log(
             "Login successful:",
@@ -322,7 +322,7 @@ exports.login = async (req, res) => {
 // Admin Login
 exports.adminLogin = async (req, res) => {
     try {
-        const { email, password, fingerprint, browser, os, device_name } = req.body;
+        const { email, password, fingerprint, browser, os, device_name, location } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
@@ -336,6 +336,7 @@ exports.adminLogin = async (req, res) => {
         const results = await userModel.findUserByEmail(cleanEmail);
 
         if (!results || results.length === 0) {
+            await userModel.logLoginAttempt(null, device_name, browser, "Failed", location);
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password."
@@ -345,6 +346,7 @@ exports.adminLogin = async (req, res) => {
         const user = results[0];
 
         if (user.account_status && user.account_status.toLowerCase() !== "active") {
+            await userModel.logLoginAttempt(user.id, device_name, browser, "Blocked", location);
             return res.status(403).json({
                 success: false,
                 message: "Your account is currently blocked. Please contact the administrator."
@@ -354,6 +356,7 @@ exports.adminLogin = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
+            await userModel.logLoginAttempt(user.id, device_name, browser, "Failed", location);
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password."
@@ -367,6 +370,7 @@ exports.adminLogin = async (req, res) => {
 
         // Explicitly check for Admin role
         if (fullUser.role_id !== 1 && roleName.toLowerCase() !== "admin" && roleName.toLowerCase() !== "administrator") {
+            await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Failed", location);
             return res.status(403).json({
                 success: false,
                 message: "Access denied. Administrator privileges are required."
@@ -386,6 +390,7 @@ exports.adminLogin = async (req, res) => {
             );
 
             if (deviceResult.status === "Blocked") {
+                await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Blocked", location);
                 return res.status(403).json({
                     success: false,
                     message: "This device is blocked.",
@@ -404,6 +409,8 @@ exports.adminLogin = async (req, res) => {
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
             expiresIn: "1d"
         });
+
+        await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Success", location);
 
         return res.status(200).json({
             success: true,

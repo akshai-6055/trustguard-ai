@@ -345,7 +345,9 @@ const EmployeeDashboard = () => {
                   </div>
                   <div className="col-6 col-sm-3">
                     <span className="text-secondary small d-block mb-1">Location</span>
-                    <span className="fw-semibold text-dark small d-block">Kottayam, Kerala</span>
+                    <span className="fw-semibold text-dark small d-block">
+                      {dashboardData?.lastLogin?.location || "Unknown"}
+                    </span>
                   </div>
                   <div className="col-6 col-sm-3">
                     <span className="text-secondary small d-block mb-1">Started</span>
@@ -374,26 +376,30 @@ const EmployeeDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="small">
-                      <tr className="border-bottom">
-                        <td className="ps-0 py-3 fw-medium text-dark">28 Jul 2026</td>
-                        <td className="py-3 text-secondary">Office Laptop</td>
-                        <td className="py-3 text-secondary">Kottayam</td>
-                        <td className="text-end pe-0 py-3">
-                          <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
-                            Success
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="ps-0 py-3 fw-medium text-dark">26 Jul 2026</td>
-                        <td className="py-3 text-secondary">Unknown Device</td>
-                        <td className="py-3 text-secondary">Unknown</td>
-                        <td className="text-end pe-0 py-3">
-                          <span className="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">
-                            Blocked
-                          </span>
-                        </td>
-                      </tr>
+                      {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
+                        dashboardData.recentActivity.map((activity, idx) => (
+                          <tr key={idx} className="border-bottom">
+                            <td className="ps-0 py-3 fw-medium text-dark">
+                              {new Date(activity.login_time).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                            </td>
+                            <td className="py-3 text-secondary">{activity.device_name}</td>
+                            <td className="py-3 text-secondary">{activity.location}</td>
+                            <td className="text-end pe-0 py-3">
+                              <span className={`badge rounded-pill px-3 py-1 ${
+                                activity.status === "Success" ? "bg-success-subtle text-success border border-success-subtle" :
+                                activity.status === "Pending" ? "bg-warning-subtle text-warning-emphasis border border-warning-subtle" :
+                                "bg-danger-subtle text-danger border border-danger-subtle"
+                              }`}>
+                                {activity.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center py-4 text-secondary">No recent login activity</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
