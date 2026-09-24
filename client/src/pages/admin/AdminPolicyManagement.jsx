@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
 import adminService from "../../services/adminService";
+import { Modal } from "bootstrap";
 
 const EMPTY_FORM = {
   policy_name: "",
@@ -47,7 +48,7 @@ const AdminPolicyManagement = () => {
     setFormData(EMPTY_FORM);
     setEditingId(null);
     setFormError("");
-    const modal = new window.bootstrap.Modal(modalRef.current);
+    const modal = new Modal(modalRef.current);
     modal.show();
   };
 
@@ -66,7 +67,7 @@ const AdminPolicyManagement = () => {
       action: policy.action
     });
     setFormError("");
-    const modal = new window.bootstrap.Modal(modalRef.current);
+    const modal = new Modal(modalRef.current);
     modal.show();
   };
 
@@ -99,7 +100,7 @@ const AdminPolicyManagement = () => {
       }
 
       if (result.success) {
-        window.bootstrap.Modal.getInstance(modalRef.current)?.hide();
+        Modal.getInstance(modalRef.current)?.hide();
         loadPolicies();
       } else {
         setFormError(result.message || "Failed to save policy.");
@@ -131,7 +132,7 @@ const AdminPolicyManagement = () => {
     switch (action) {
       case "Allow":  return "bg-success-subtle text-success border border-success-subtle";
       case "Deny":   return "bg-danger-subtle text-danger border border-danger-subtle";
-      case "Review": return "bg-warning-subtle text-warning-emphasis border border-warning-subtle";
+      case "MFA":    return "bg-warning-subtle text-warning-emphasis border border-warning-subtle";
       default:       return "bg-light text-dark border";
     }
   };
@@ -182,7 +183,7 @@ const AdminPolicyManagement = () => {
                 <option value="All">All Actions</option>
                 <option value="Allow">Allow</option>
                 <option value="Deny">Deny</option>
-                <option value="Review">Review</option>
+                <option value="MFA">MFA (Review)</option>
               </select>
             </div>
             <div className="col-md-2">
@@ -256,7 +257,7 @@ const AdminPolicyManagement = () => {
                         <span className={`badge ${getActionBadge(policy.action)}`}>
                           {policy.action === "Allow" && <i className="bi bi-check-circle me-1"></i>}
                           {policy.action === "Deny"  && <i className="bi bi-x-circle me-1"></i>}
-                          {policy.action === "Review" && <i className="bi bi-hourglass-split me-1"></i>}
+                          {policy.action === "MFA" && <i className="bi bi-hourglass-split me-1"></i>}
                           {policy.action}
                         </span>
                       </td>
@@ -356,7 +357,7 @@ const AdminPolicyManagement = () => {
                   <select className="form-select" name="action" value={formData.action} onChange={handleChange}>
                     <option value="Allow">Allow</option>
                     <option value="Deny">Deny</option>
-                    <option value="Review">Review</option>
+                    <option value="MFA">MFA (Require Auth)</option>
                   </select>
                 </div>
 

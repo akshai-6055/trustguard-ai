@@ -196,14 +196,14 @@ const DeviceManagement = () => {
                             {device.status !== "Trusted" && (
                               <li>
                                 <button className="dropdown-item small py-2 text-success d-flex align-items-center gap-2" onClick={() => handleStatusChange(device.id, "Trusted")}>
-                                  <i className="bi bi-check-circle"></i> Trust Device
+                                  <i className="bi bi-check-circle"></i> Approve (Trust)
                                 </button>
                               </li>
                             )}
                             {device.status !== "Blocked" && (
                               <li>
                                 <button className="dropdown-item small py-2 text-warning d-flex align-items-center gap-2" onClick={() => handleStatusChange(device.id, "Blocked")}>
-                                  <i className="bi bi-x-circle"></i> Revoke Trust
+                                  <i className="bi bi-x-circle"></i> Decline (Block)
                                 </button>
                               </li>
                             )}
