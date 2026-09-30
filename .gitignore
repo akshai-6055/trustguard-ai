@@ -141,3 +141,18 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Selenium per-run artifacts
+tests/selenium/results/
+tests/selenium/report.json
+
+# Postman per-run artifacts
+tests/postman/reports/*.html
+tests/postman/results/
+
+# Throwaway/debug
+scratch/
+tests/selenium/test_debug_login.py
