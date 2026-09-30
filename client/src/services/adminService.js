@@ -86,6 +86,11 @@ const adminService = {
     return response.data;
   },
 
+  deleteFailedLogin: async (id) => {
+    const response = await axiosInstance.delete(`/admin/security-alerts/failed-logins/${id}`);
+    return response.data;
+  },
+
   // --- Audit Logs ---
   getAuditLogs: async () => {
     const response = await axiosInstance.get("/admin/audit-logs");

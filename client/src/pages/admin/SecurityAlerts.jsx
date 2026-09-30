@@ -25,6 +25,22 @@ const SecurityAlerts = () => {
     load();
   }, []);
 
+  const handleDeleteFailedLogin = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this failed login log?")) return;
+    try {
+      const res = await adminService.deleteFailedLogin(id);
+      if (res.success) {
+        setAlerts((prev) => ({
+          ...prev,
+          failedLogins: prev.failedLogins.filter((log) => log.id !== id),
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to delete log:", err);
+      alert("Failed to delete log.");
+    }
+  };
+
   const totalAlerts = alerts.failedLogins.length + alerts.blockedDevices.length + alerts.blockedUsers.length;
 
   return (
@@ -139,6 +155,7 @@ const SecurityAlerts = () => {
                           <th className="py-2 border-0">LOCATION</th>
                           <th className="py-2 border-0">TIMESTAMP</th>
                           <th className="py-2 border-0">STATUS</th>
+                          <th className="py-2 border-0 text-end pe-4">ACTION</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -163,6 +180,15 @@ const SecurityAlerts = () => {
                               <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
                                 <i className="bi bi-x-circle me-1"></i>{a.status}
                               </span>
+                            </td>
+                            <td className="py-2 text-end pe-4">
+                              <button
+                                className="btn btn-sm btn-outline-danger border-0"
+                                title="Delete Log"
+                                onClick={() => handleDeleteFailedLogin(a.id)}
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
                             </td>
                           </tr>
                         ))}

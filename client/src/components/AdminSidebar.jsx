@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const isActive = (path) => location.pathname === path;
 
@@ -67,10 +67,12 @@ const AdminSidebar = () => {
             Policy Management
           </Link>
 
-          <Link to="/admin/audit-logs" className={linkClass("/admin/audit-logs")}>
-            <i className={`bi bi-journal-text ${iconClass("/admin/audit-logs")}`}></i>
-            Audit Logs
-          </Link>
+          {(!user?.permissions || user.permissions.includes('VIEW_AUDIT_LOGS')) && (
+            <Link to="/admin/audit-logs" className={linkClass("/admin/audit-logs")}>
+              <i className={`bi bi-journal-text ${iconClass("/admin/audit-logs")}`}></i>
+              Audit Logs
+            </Link>
+          )}
 
           {/*<Link to="/admin/continuous-authentication" className={linkClass("/admin/continuous-authentication")}>
             <i className={`bi bi-shield-check ${iconClass("/admin/continuous-authentication")}`}></i>

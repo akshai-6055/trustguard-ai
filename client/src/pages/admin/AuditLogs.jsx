@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
 import adminService from "../../services/adminService";
+import { useAuth } from "../../context/AuthContext";
 
 const AuditLogs = () => {
+  const { user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,6 +66,18 @@ const AuditLogs = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (user && user.permissions && !user.permissions.includes('VIEW_AUDIT_LOGS')) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-5 mt-5">
+          <i className="bi bi-shield-lock text-danger" style={{ fontSize: "3rem" }}></i>
+          <h3 className="mt-3 text-dark fw-bold">Access Denied</h3>
+          <p className="text-secondary">You do not have permission to view Audit Logs.</p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

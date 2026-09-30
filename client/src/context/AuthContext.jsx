@@ -72,7 +72,7 @@ const login = async (email, password) => {
             });
 
             if (coords) {
-                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`);
+                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`, { signal: AbortSignal.timeout(2000) });
                 const osmData = await osmRes.json();
                 if (osmData && osmData.address) {
                     const city = osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || "";
@@ -82,7 +82,7 @@ const login = async (email, password) => {
             }
 
             if (!location || location === "Unknown" || location.trim() === "") {
-                const locRes = await fetch("https://ipinfo.io/json");
+                const locRes = await fetch("https://ipinfo.io/json", { signal: AbortSignal.timeout(2000) });
                 const locData = await locRes.json();
                 if (locData.city && locData.region) {
                     location = `${locData.city}, ${locData.region}`;
@@ -178,7 +178,7 @@ const adminLogin = async (email, password) => {
             });
 
             if (coords) {
-                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`);
+                const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lon}`, { signal: AbortSignal.timeout(2000) });
                 const osmData = await osmRes.json();
                 if (osmData && osmData.address) {
                     const city = osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || "";
@@ -188,7 +188,7 @@ const adminLogin = async (email, password) => {
             }
 
             if (!location || location === "Unknown" || location.trim() === "") {
-                const locRes = await fetch("https://ipinfo.io/json");
+                const locRes = await fetch("https://ipinfo.io/json", { signal: AbortSignal.timeout(2000) });
                 const locData = await locRes.json();
                 if (locData.city && locData.region) {
                     location = `${locData.city}, ${locData.region}`;
