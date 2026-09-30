@@ -264,6 +264,20 @@ exports.getSecurityAlerts = async (req, res) => {
     }
 };
 
+exports.deleteFailedLogin = async (req, res) => {
+    try {
+        const logId = req.params.id;
+        
+        // We only want to delete failed logins, so verify status is not Success, or just delete by ID.
+        // Usually, the route is specific enough.
+        await db.query(`DELETE FROM login_history WHERE id = ?`, [logId]);
+        
+        return res.status(200).json({ success: true, message: "Failed login log deleted successfully." });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to delete log.", error: err.message });
+    }
+};
+
 // ============================================================
 // Audit Logs
 // ============================================================

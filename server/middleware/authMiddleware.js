@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const jwt = require("jsonwebtoken");
 
 // Middleware to verify JWT Token
@@ -70,8 +71,26 @@ const authorizeRoles = (...allowedRoles) => {
     };
 };
 
-module.exports = {
-    verifyToken,
-    authorizeRoles
+const authorizePermissions = (...requiredPermissions) => {
+    return async (req, res, next) => {
+        if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+        try {
+            const [userRows] = await db.query(`SELECT role_id FROM users WHERE id = ?`, [req.user.id]);
+            if (!userRows || userRows.length === 0) return res.status(401).json({ success: false, message: 'User not found.' });
+            const roleId = userRows[0].role_id;
+            const [permsRows] = await db.query(`SELECT p.permission_name FROM role_permissions rp JOIN permissions p ON rp.permission_id = p.permission_id WHERE rp.role_id = ?`, [roleId]);
+            const userPermissions = permsRows.map(p => p.permission_name);
+            const hasPermissions = requiredPermissions.every(perm => userPermissions.includes(perm));
+            if (!hasPermissions) return res.status(403).json({ success: false, message: 'Forbidden.' });
+            next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Internal error.' });
+        }
+    };
 };
 
+module.exports = {
+    verifyToken,
+    authorizeRoles,
+    authorizePermissions
+};

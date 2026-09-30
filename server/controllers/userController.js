@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const userModel = require("../models/userModel");
+const db = require("../config/db");
 
 
 // ============================================================
@@ -20,9 +21,18 @@ exports.getProfile = async (req, res) => {
             });
         }
 
+        const user = results[0];
+
+        const [permsRows] = await db.query(
+            `SELECT p.permission_name FROM role_permissions rp
+             JOIN permissions p ON rp.permission_id = p.permission_id
+             WHERE rp.role_id = ?`, [user.role_id]
+        );
+        user.permissions = permsRows.map(p => p.permission_name);
+
         return res.status(200).json({
             success: true,
-            user: results[0]
+            user: user
         });
 
     } catch (error) {

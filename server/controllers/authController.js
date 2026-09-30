@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
 const deviceModel = require("../models/deviceModel");
+const db = require("../config/db");
 
 // Register User
 exports.register = async (req, res) => {
@@ -234,15 +235,19 @@ exports.login = async (req, res) => {
             );
 
 
+        const [permsRows] = await db.query(
+            `SELECT p.permission_name FROM role_permissions rp
+             JOIN permissions p ON rp.permission_id = p.permission_id
+             WHERE rp.role_id = ?`, [fullUser.role_id]
+        );
+        const permissions = permsRows.map(p => p.permission_name);
+
         const tokenPayload = {
-
             id: fullUser.id,
-
             email: fullUser.email,
-
             role_id: fullUser.role_id,
-
-            role_name: roleName
+            role_name: roleName,
+            permissions: permissions
         };
 
 
@@ -286,6 +291,8 @@ exports.login = async (req, res) => {
                 role_id: fullUser.role_id,
 
                 role_name: roleName,
+
+                permissions: permissions,
 
                 account_status:
                     fullUser.account_status,
@@ -399,11 +406,19 @@ exports.adminLogin = async (req, res) => {
             }
         }
 
+        const [permsRows] = await db.query(
+            `SELECT p.permission_name FROM role_permissions rp
+             JOIN permissions p ON rp.permission_id = p.permission_id
+             WHERE rp.role_id = ?`, [fullUser.role_id]
+        );
+        const permissions = permsRows.map(p => p.permission_name);
+
         const tokenPayload = {
             id: fullUser.id,
             email: fullUser.email,
             role_id: fullUser.role_id,
-            role_name: roleName
+            role_name: roleName,
+            permissions: permissions
         };
 
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
@@ -422,6 +437,7 @@ exports.adminLogin = async (req, res) => {
                 email: fullUser.email,
                 role_id: fullUser.role_id,
                 role_name: roleName,
+                permissions: permissions,
                 account_status: fullUser.account_status,
                 created_at: fullUser.created_at
             },
@@ -452,9 +468,18 @@ exports.getProfile = async (req, res) => {
             });
         }
 
+        const user = results[0];
+
+        const [permsRows] = await db.query(
+            `SELECT p.permission_name FROM role_permissions rp
+             JOIN permissions p ON rp.permission_id = p.permission_id
+             WHERE rp.role_id = ?`, [user.role_id]
+        );
+        user.permissions = permsRows.map(p => p.permission_name);
+
         return res.status(200).json({
             success: true,
-            user: results[0]
+            user: user
         });
 
     } catch (error) {
