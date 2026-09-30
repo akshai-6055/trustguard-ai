@@ -19,5 +19,8 @@
   "homepage": "https://github.com/akshai-6055/trustguard-ai#readme",
   "devDependencies": {
     "concurrently": "^10.0.4"
+  },
+  "dependencies": {
+    "axios": "^1.20.0"
   }
 }
