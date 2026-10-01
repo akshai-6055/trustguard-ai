@@ -257,7 +257,7 @@ const Landing = () => {
                 <div className="text-primary mb-3 fs-3">
                   <i className="bi bi-fingerprint"></i>
                 </div>
-                <h4 className="fs-5 fw-bold text-white mb-2">Identity & Auth</h4>
+                <h4 className="fs-5 fw-bold text-blackmb-2">Identity & Auth</h4>
                 <p className="text-secondary small mb-0">
                   User registration, bcrypt password hashing, and JWT token authentication.
                 </p>
@@ -269,7 +269,7 @@ const Landing = () => {
                 <div className="text-primary mb-3 fs-3">
                   <i className="bi bi-laptop"></i>
                 </div>
-                <h4 className="fs-5 fw-bold text-white mb-2">Device Trust</h4>
+                <h4 className="fs-5 fw-bold text-blackmb-2">Device Trust</h4>
                 <p className="text-secondary small mb-0">
                   Device fingerprinting, approval/blocking workflow, and status verification.
                 </p>
@@ -281,7 +281,7 @@ const Landing = () => {
                 <div className="text-primary mb-3 fs-3">
                   <i className="bi bi-sliders"></i>
                 </div>
-                <h4 className="fs-5 fw-bold text-white mb-2">Access Policies</h4>
+                <h4 className="fs-5 fw-bold text-black mb-2">Access Policies</h4>
                 <p className="text-secondary small mb-0">
                   Department-based permissions, time-window constraints, and least privilege access.
                 </p>
@@ -293,7 +293,7 @@ const Landing = () => {
                 <div className="text-primary mb-3 fs-3">
                   <i className="bi bi-graph-up-arrow"></i>
                 </div>
-                <h4 className="fs-5 fw-bold text-white mb-2">Audit & Analytics</h4>
+                <h4 className="fs-5 fw-bold text-black mb-2">Audit & Analytics</h4>
                 <p className="text-secondary small mb-0">
                   Real-time session monitoring and comprehensive event logs for full compliance.
                 </p>
