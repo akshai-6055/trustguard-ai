@@ -11,9 +11,7 @@ const UserManagement = () => {
   const [filterRole, setFilterRole] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
 
-  const [modalMode, setModalMode] = useState("create");
   const [formData, setFormData] = useState({ full_name: "", email: "", password: "", role_id: 2, account_status: "Active" });
-  const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const modalRef = React.useRef(null);
@@ -52,24 +50,7 @@ const UserManagement = () => {
   };
 
   const openCreateModal = () => {
-    setModalMode("create");
     setFormData({ full_name: "", email: "", password: "", role_id: 2, account_status: "Active" });
-    setEditingId(null);
-    setFormError("");
-    const modal = new Modal(modalRef.current);
-    modal.show();
-  };
-
-  const openEditModal = (user) => {
-    setModalMode("edit");
-    setEditingId(user.id);
-    setFormData({
-      full_name: user.full_name,
-      email: user.email,
-      password: "",
-      role_id: user.role_id,
-      account_status: user.account_status || "Active"
-    });
     setFormError("");
     const modal = new Modal(modalRef.current);
     modal.show();
@@ -77,19 +58,14 @@ const UserManagement = () => {
 
   const handleSave = async () => {
     setFormError("");
-    if (!formData.full_name || !formData.email || (modalMode === "create" && !formData.password)) {
+    if (!formData.full_name || !formData.email || !formData.password) {
       setFormError("Please fill in all required fields.");
       return;
     }
 
     try {
       setSaving(true);
-      let result;
-      if (modalMode === "create") {
-        result = await adminService.createUser(formData);
-      } else {
-        result = await adminService.updateUser(editingId, formData);
-      }
+      const result = await adminService.createUser(formData);
 
       if (result.success) {
         Modal.getInstance(modalRef.current)?.hide();
@@ -237,11 +213,6 @@ const UserManagement = () => {
                                 <i className="bi bi-eye"></i> View Profile
                               </Link>
                             </li>
-                            <li>
-                              <button className="dropdown-item small py-2 d-flex align-items-center gap-2" onClick={() => openEditModal(user)}>
-                                <i className="bi bi-pencil"></i> Edit User
-                              </button>
-                            </li>
                             {user.account_status === "Active" ? (
                               <li>
                                 <button className="dropdown-item small py-2 text-danger d-flex align-items-center gap-2" onClick={() => handleStatusChange(user.id, "Blocked")}>
@@ -279,8 +250,8 @@ const UserManagement = () => {
           <div className="modal-content border-0 shadow-lg rounded-4">
             <div className="modal-header border-0 bg-dark text-white rounded-top-4 px-4 py-3">
               <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
-                <i className={`bi ${modalMode === "create" ? "bi-person-plus-fill" : "bi-pencil-fill"} text-primary`}></i>
-                {modalMode === "create" ? "Create New User" : "Edit User"}
+                <i className="bi bi-person-plus-fill text-primary"></i>
+                Create New User
               </h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -313,7 +284,7 @@ const UserManagement = () => {
                   />
                 </div>
                 <div className="col-12">
-                  <label className="form-label fw-semibold small text-secondary">PASSWORD {modalMode === "create" ? <span className="text-danger">*</span> : "(Leave blank to keep current)"}</label>
+                  <label className="form-label fw-semibold small text-secondary">PASSWORD <span className="text-danger">*</span></label>
                   <input
                     type="password"
                     className="form-control"

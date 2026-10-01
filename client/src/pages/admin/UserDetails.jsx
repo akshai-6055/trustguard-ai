@@ -7,26 +7,31 @@ const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
         const data = await adminService.getUserById(id);
         if (data.success) {
           setUser(data.user);
+          const devData = await adminService.getDevices();
+          if (devData.success) {
+            setDevices(devData.devices.filter(d => d.email === data.user.email || d.user_id === Number(id)));
+          }
         } else {
           alert("User not found.");
           navigate("/admin/users");
         }
       } catch (error) {
-        console.error("Failed to load user:", error);
+        console.error("Failed to load user data:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadUser();
+    loadData();
   }, [id, navigate]);
 
   if (loading) {
@@ -94,13 +99,43 @@ const UserDetails = () => {
                      <i className="bi bi-shield-lock-fill fs-5"></i>
                    </div>
                    <div>
-                     <h6 className="fw-bold text-dark mb-1">Zero Trust Security Verified</h6>
-                     <p className="small text-secondary mb-0">This user is subject to continuous authentication and PBAC policies.</p>
+                     <h6 className="fw-bold text-dark mb-1">Continuous Authentication Profile</h6>
+                     <p className="small text-secondary mb-0">This user's access is continuously verified based on their active devices and trust scores.</p>
                    </div>
                 </div>
                 
-                <h6 className="fw-bold text-dark mb-3">Linked Devices</h6>
-                <p className="small text-secondary">To view devices linked to this user, navigate to the <Link to="/admin/devices">Device Management</Link> portal and filter by this user's email.</p>
+                <h6 className="fw-bold text-dark mb-3">Live Device Trust Analysis</h6>
+                {devices.length === 0 ? (
+                  <p className="small text-secondary">No devices currently registered for this user.</p>
+                ) : (
+                  <div className="d-flex flex-column gap-3">
+                    {devices.map(device => (
+                      <div key={device.id} className="p-3 border rounded-3 bg-white shadow-sm d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="fw-bold text-dark mb-1">{device.device_name}</h6>
+                          <div className="text-secondary small mb-1">
+                            <i className="bi bi-laptop me-1"></i> {device.os} • {device.browser}
+                          </div>
+                          <div className="small">
+                            Status: <span className={`badge ${device.status === 'Trusted' ? 'bg-success-subtle text-success' : device.status === 'Pending' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-danger-subtle text-danger'}`}>{device.status}</span>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <div className="text-secondary small fw-semibold mb-1">Continuous Trust Score</div>
+                          <div className="d-flex align-items-center gap-2 justify-content-end">
+                            <div className="progress flex-grow-1" style={{ height: "8px", width: "100px" }}>
+                              <div 
+                                className={`progress-bar ${device.trust_score >= 80 ? 'bg-success' : device.trust_score >= 50 ? 'bg-warning' : 'bg-danger'}`} 
+                                style={{ width: `${device.trust_score}%` }}>
+                              </div>
+                            </div>
+                            <span className="fw-bold fs-5" style={{ color: device.trust_score >= 80 ? '#198754' : device.trust_score >= 50 ? '#ffc107' : '#dc3545' }}>{device.trust_score}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
              </div>
            </div>
         </div>
