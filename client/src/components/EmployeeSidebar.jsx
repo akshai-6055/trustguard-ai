@@ -78,13 +78,14 @@ const EmployeeSidebar = () => {
         </Link>
 
         {/* Login History */}
-        <a
-          href="#login-history"
-          className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary w-100"
+        <Link
+          to="/login-history"
+          className={linkClass("/login-history")}
+          style={linkStyle("/login-history")}
         >
           <i className="bi bi-clock-history fs-5"></i>
           Login History
-        </a>
+        </Link>
 
         {/* Security Notifications */}
         <a

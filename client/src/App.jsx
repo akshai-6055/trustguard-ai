@@ -11,6 +11,7 @@ import ChangePassword from "./pages/ChangePassword.jsx";
 import TrustedDevices from "./pages/TrustedDevices.jsx";
 import PolicyManagement from "./pages/PolicyManagement.jsx";
 import ContinuousAuthentication from "./pages/ContinuousAuthentication.jsx";
+import LoginHistory from "./pages/LoginHistory.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
 import UserManagement from "./pages/admin/UserManagement.jsx";
@@ -141,6 +142,14 @@ function App() {
       />
 
       {/* Protected Policy Management (PBAC) Routes */}
+      <Route
+        path="/login-history"
+        element={
+          <ProtectedRoute>
+            <LoginHistory />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/policies"
         element={

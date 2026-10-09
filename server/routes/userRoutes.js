@@ -16,4 +16,7 @@ const continuousAuth = require("../middleware/continuousAuth");
 // Employee Dashboard route
 router.get("/dashboard", continuousAuth("EmployeeDashboard", 2), userController.getDashboard);
 
+// User Login History route
+router.get("/login-history", userController.getLoginHistory);
+
 module.exports = router;

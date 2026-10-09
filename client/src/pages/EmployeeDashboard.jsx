@@ -266,12 +266,6 @@ const EmployeeDashboard = () => {
             </a>
 
             {/* Active Sessions Link */}
-            <a
-              href="#active-sessions"
-              className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
-            >
-              <i className="bi bi-activity fs-5"></i> Active Sessions
-            </a>
           </div>
 
           {/* Bottom Sidebar Items */}

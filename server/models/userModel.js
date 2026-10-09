@@ -473,6 +473,26 @@ const logLoginAttempt = async (userId, deviceName, browser, status, location = '
 };
 
 // ============================================================
+// Get all login history for a user
+// ============================================================
+const getLoginHistory = async (userId) => {
+    const sql = `
+        SELECT
+            id,
+            login_time,
+            device_name,
+            browser,
+            location,
+            status
+        FROM login_history
+        WHERE user_id = ?
+        ORDER BY id DESC
+    `;
+    const [rows] = await db.query(sql, [userId]);
+    return rows;
+};
+
+// ============================================================
 // Export all functions
 // ============================================================
 module.exports = {
@@ -489,5 +509,6 @@ module.exports = {
     updateUserStatus,
     updateUserAdmin,
     deleteUser,
-    logLoginAttempt
+    logLoginAttempt,
+    getLoginHistory
 };
