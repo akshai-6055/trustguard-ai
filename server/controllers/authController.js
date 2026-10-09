@@ -262,24 +262,81 @@ exports.login = async (req, res) => {
 
 
         // =====================================================
-        // STEP 8: LOGIN RESPONSE
+        // STEP 7.5: ANOMALY DETECTION (Impossible Travel)
+        // =====================================================
+        if (location && location !== 'Unknown') {
+            // Get the user's most recent successful login BEFORE this one
+            const [recentLogins] = await db.query(`
+                SELECT location, login_time 
+                FROM login_history 
+                WHERE user_id = ? AND status = 'Success' 
+                ORDER BY login_time DESC 
+                LIMIT 1
+            `, [fullUser.id]);
+
+            if (recentLogins.length > 0) {
+                const lastLogin = recentLogins[0];
+                if (lastLogin.location && lastLogin.location !== 'Unknown' && lastLogin.location !== location) {
+                    const timeGapHours = Math.abs(Date.now() - new Date(lastLogin.login_time).getTime()) / (1000 * 60 * 60);
+                    
+                    // If location changed in less than 2 hours, flag it
+                    if (timeGapHours < 2) {
+                        const description = `Impossible travel anomaly detected. Location changed from ${lastLogin.location} to ${location} in ${timeGapHours.toFixed(2)} hours.`;
+                        
+                        console.warn(`[Anomaly Detection] ${description} for user ${fullUser.id}`);
+
+                        // Log to audit_logs (so it shows in SecurityAlerts / AuditLogs)
+                        await db.query(`
+                            INSERT INTO audit_logs (user_id, action, module, description, ip_address, created_at)
+                            VALUES (?, ?, ?, ?, ?, NOW())
+                        `, [fullUser.id, 'Anomalous Login Detected', 'Security', description, 'System']);
+
+                        // Penalize device trust score by a heavy amount (e.g. 40 points)
+                        if (deviceResult && deviceResult.deviceId) {
+                            const penalty = 40;
+                            await db.query(`
+                                UPDATE devices 
+                                SET trust_score = GREATEST(0, trust_score - ?) 
+                                WHERE id = ?
+                            `, [penalty, deviceResult.deviceId]);
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================
+        // STEP 8: LOGIN RESPONSE & SESSION CREATION
         // =====================================================
         await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Success", location);
 
-        console.log(
-            "Login successful:",
-            fullUser.email
-        );
+        // Store the session in user_sessions table
+        let deviceId = deviceResult ? deviceResult.deviceId : null;
+        console.log("--- DEBUG LOGIN ---");
+        console.log("Fingerprint sent by frontend:", fingerprint);
+        console.log("DeviceResult:", deviceResult);
+        console.log("Computed deviceId:", deviceId);
+        
+        if (deviceId) {
+            try {
+                await db.query(`
+                    INSERT INTO user_sessions (user_id, device_id, jwt_token, login_time, status)
+                    VALUES (?, ?, ?, NOW(), 'Active')
+                `, [fullUser.id, deviceId, token]);
+                console.log("Successfully inserted session into user_sessions");
+            } catch (err) {
+                console.error("Failed to insert session into user_sessions:", err);
+            }
+        } else {
+            console.log("Skipped user_sessions insert because deviceId is null");
+        }
 
+        console.log("Login successful:", fullUser.email);
 
         return res.status(200).json({
-
             success: true,
-
             message: "Login successful.",
-
             token,
-
             user: {
 
                 id: fullUser.id,
@@ -503,4 +560,59 @@ exports.logout = (req, res) => {
         success: true,
         message: "Logged out successfully."
     });
+};
+
+// ============================================================
+// Verify MFA Code
+// ============================================================
+exports.verifyMFA = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const userId = req.user.id;
+
+        const authHeader = req.headers["authorization"];
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ success: false, message: "No token provided." });
+        }
+        const token = authHeader.split(" ")[1];
+
+        const [sessions] = await db.query(`
+            SELECT * FROM user_sessions 
+            WHERE jwt_token = ? AND status = 'Active'
+        `, [token]);
+
+        if (sessions.length === 0) {
+            return res.status(401).json({ success: false, message: "Session is expired or invalid." });
+        }
+        const activeSession = sessions[0];
+
+        const { verifyOTP } = require('../services/mfaService');
+        const isValid = verifyOTP(activeSession.session_id, code);
+
+        if (isValid) {
+            // Boost device trust score slightly since they passed MFA to suppress immediate re-trigger
+            await db.query(`
+                UPDATE devices 
+                SET trust_score = LEAST(100, trust_score + 10) 
+                WHERE id = ?
+            `, [activeSession.device_id]);
+
+            await db.query(`
+                INSERT INTO audit_logs (user_id, action, module, description, ip_address, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
+            `, [userId, 'MFA Verification Success', 'Security', `User successfully verified MFA code for session ${activeSession.session_id}.`, req.ip]);
+
+            return res.status(200).json({ success: true, message: "MFA Verification successful." });
+        } else {
+            await db.query(`
+                INSERT INTO audit_logs (user_id, action, module, description, ip_address, created_at)
+                VALUES (?, ?, ?, ?, ?, NOW())
+            `, [userId, 'MFA Verification Failed', 'Security', `User failed MFA verification for session ${activeSession.session_id}.`, req.ip]);
+
+            return res.status(401).json({ success: false, message: "Invalid or expired MFA code." });
+        }
+    } catch (error) {
+        console.error("MFA Verification error:", error);
+        return res.status(500).json({ success: false, message: "Failed to verify MFA." });
+    }
 };
