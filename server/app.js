@@ -34,6 +34,11 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+// Initialize Background Jobs
+const { initDecayJob } = require("./jobs/deviceDecayJob");
+// You can pass '* * * * *' to run every minute for your demo, currently runs every hour:
+initDecayJob('0 * * * *'); 
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
