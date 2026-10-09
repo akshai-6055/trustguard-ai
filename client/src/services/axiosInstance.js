@@ -27,13 +27,15 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid: clear local storage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // Token expired or invalid: clear local storage (unless it's an MFA challenge)
+      if (!error.response.data?.mfaRequired) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
 
-      // Redirect to login if not already on login or landing page
-      if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
-        window.location.href = "/login";
+        // Redirect to login if not already on login or landing page
+        if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

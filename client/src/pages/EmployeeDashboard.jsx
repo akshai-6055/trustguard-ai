@@ -12,7 +12,56 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [preciseLocation, setPreciseLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [showMfaModal, setShowMfaModal] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState("");
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      setLocationLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
+            const data = await res.json();
+            
+            let addressStr = "";
+            if (data && data.address) {
+              const { amenity, house_number, road, neighbourhood, suburb, city, town, state } = data.address;
+              const parts = [amenity, house_number, road, neighbourhood, suburb, city || town, state].filter(Boolean);
+              addressStr = parts.join(", ");
+            } else if (data && data.display_name) {
+              addressStr = data.display_name;
+            }
+            
+            if (addressStr) {
+               setPreciseLocation(`${addressStr} (${lat.toFixed(5)}, ${lon.toFixed(5)})`);
+            } else {
+               setPreciseLocation(`${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+            }
+          } catch (err) {
+            setPreciseLocation(`${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+          }
+          setLocationLoading(false);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationLoading(false);
+        },
+        { enableHighAccuracy: true, maximumAge: 0 }
+      );
+    }
+  }, []);
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -24,10 +73,22 @@ const EmployeeDashboard = () => {
 
         if (dashRes.status === "fulfilled" && dashRes.value?.success) {
           setDashboardData(dashRes.value.dashboard);
+        } else if (dashRes.status === "rejected") {
+          const errData = dashRes.reason?.response?.data;
+          if (errData?.mfaRequired) {
+            setShowMfaModal(true);
+          } else {
+            setErrorMessage(errData?.message || "Failed to load dashboard data");
+          }
         }
 
         if (devRes.status === "fulfilled" && devRes.value?.success) {
           setUserDevices(devRes.value.devices || []);
+        } else if (devRes.status === "rejected") {
+          const errData = devRes.reason?.response?.data;
+          if (errData?.mfaRequired && !showMfaModal) {
+            setShowMfaModal(true);
+          }
         }
       } catch (err) {
         setErrorMessage(err.response?.data?.message || "");
@@ -38,6 +99,32 @@ const EmployeeDashboard = () => {
 
     fetchDashboard();
   }, []);
+
+  const handleVerifyMfa = async () => {
+    try {
+      setMfaError("");
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/auth/mfa/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: mfaCode })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowMfaModal(false);
+        setMfaCode("");
+        // Reload dashboard data now that MFA is passed
+        window.location.reload(); 
+      } else {
+        setMfaError(data.message || "Invalid code");
+      }
+    } catch (err) {
+      setMfaError("Failed to verify MFA");
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -345,13 +432,13 @@ const EmployeeDashboard = () => {
                   </div>
                   <div className="col-6 col-sm-3">
                     <span className="text-secondary small d-block mb-1">Location</span>
-                    <span className="fw-semibold text-dark small d-block">
-                      {dashboardData?.lastLogin?.location || "Unknown"}
+                    <span className="fw-semibold text-dark small d-block" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={preciseLocation || dashboardData?.lastLogin?.location || "Unknown"}>
+                      {locationLoading ? "Detecting..." : (preciseLocation || dashboardData?.lastLogin?.location || "Unknown")}
                     </span>
                   </div>
                   <div className="col-6 col-sm-3">
-                    <span className="text-secondary small d-block mb-1">Started</span>
-                    <span className="fw-semibold text-dark small d-block">09:15 AM</span>
+                    <span className="text-secondary small d-block mb-1">Current Time</span>
+                    <span className="fw-semibold text-dark small d-block">{currentTime.toLocaleTimeString()}</span>
                   </div>
                 </div>
               </div>
@@ -565,6 +652,36 @@ const EmployeeDashboard = () => {
           </footer>
         </main>
       </div>
+
+      {/* MFA MODAL */}
+      {showMfaModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-warning text-dark">
+                <h5 className="modal-title"><i className="bi bi-shield-lock-fill me-2"></i> Security Verification</h5>
+              </div>
+              <div className="modal-body">
+                <p>We detected unusual activity or a policy requirement. Please enter the 6-digit code generated by the system to continue.</p>
+                {mfaError && <div className="alert alert-danger p-2">{mfaError}</div>}
+                <input 
+                  type="text" 
+                  className="form-control form-control-lg text-center" 
+                  placeholder="------" 
+                  maxLength="6"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowMfaModal(false); handleLogout(); }}>Cancel (Logout)</button>
+                <button type="button" className="btn btn-primary" onClick={handleVerifyMfa} disabled={mfaCode.length !== 6}>Verify Code</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

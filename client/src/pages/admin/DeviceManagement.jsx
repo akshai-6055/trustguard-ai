@@ -8,6 +8,10 @@ const DeviceManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
 
+  const [showRiskModal, setShowRiskModal] = useState(false);
+  const [selectedDeviceRisk, setSelectedDeviceRisk] = useState(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+
   const loadDevices = async () => {
     try {
       setLoading(true);
@@ -53,6 +57,30 @@ const DeviceManagement = () => {
       } catch (error) {
         alert("An error occurred while deleting the device.");
       }
+    }
+  };
+
+  const handleViewRisk = async (deviceId) => {
+    try {
+      setShowRiskModal(true);
+      setRiskLoading(true);
+      setSelectedDeviceRisk(null);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/admin/devices/${deviceId}/risk`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedDeviceRisk({ deviceId, ...data });
+      } else {
+        alert(data.message || "Failed to load risk factors");
+        setShowRiskModal(false);
+      }
+    } catch (err) {
+      alert("Failed to load risk factors");
+      setShowRiskModal(false);
+    } finally {
+      setRiskLoading(false);
     }
   };
 
@@ -193,6 +221,11 @@ const DeviceManagement = () => {
                             Control
                           </button>
                           <ul className="dropdown-menu shadow-sm">
+                            <li>
+                              <button className="dropdown-item small py-2 text-info d-flex align-items-center gap-2" onClick={() => handleViewRisk(device.id)}>
+                                <i className="bi bi-search"></i> View Risk Factors
+                              </button>
+                            </li>
                             {device.status !== "Trusted" && (
                               <li>
                                 <button className="dropdown-item small py-2 text-success d-flex align-items-center gap-2" onClick={() => handleStatusChange(device.id, "Trusted")}>
@@ -224,6 +257,46 @@ const DeviceManagement = () => {
           )}
         </div>
       </div>
+
+      {/* Risk Factors Modal */}
+      {showRiskModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-light">
+                <h5 className="modal-title"><i className="bi bi-shield-exclamation me-2 text-warning"></i>Live Risk Factors</h5>
+                <button type="button" className="btn-close" onClick={() => setShowRiskModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                {riskLoading ? (
+                  <div className="text-center py-4"><div className="spinner-border text-primary"></div></div>
+                ) : selectedDeviceRisk ? (
+                  <div>
+                    <h6 className="mb-3">Current Risk Score: <span className="text-danger fw-bold">{selectedDeviceRisk.riskScore}/100</span></h6>
+                    <ul className="list-group list-group-flush">
+                      {selectedDeviceRisk.factors.length > 0 ? (
+                        selectedDeviceRisk.factors.map((factor, idx) => (
+                          <li key={idx} className="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>{factor.reason}</span>
+                            <span className="badge bg-danger rounded-pill">+{factor.score}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="list-group-item text-success px-0"><i className="bi bi-check-circle-fill me-2"></i>No active risk factors detected.</li>
+                      )}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="text-danger">Failed to load data.</div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowRiskModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

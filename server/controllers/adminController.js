@@ -145,6 +145,43 @@ exports.getAllDevices = async (req, res) => {
     }
 };
 
+exports.getDeviceRisk = async (req, res) => {
+    try {
+        const deviceId = req.params.id;
+        const db = require('../config/db');
+        const { calculateRisk } = require('../services/riskEngine');
+
+        const [deviceRows] = await db.query(`SELECT * FROM devices WHERE id = ?`, [deviceId]);
+        if (!deviceRows.length) return res.status(404).json({ success: false, message: "Device not found" });
+        const device = deviceRows[0];
+
+        const [recentLogins] = await db.query(`
+            SELECT location, login_time 
+            FROM login_history 
+            WHERE user_id = ? AND status = 'Success' 
+            ORDER BY login_time DESC 
+            LIMIT 2
+        `, [device.user_id]);
+
+        const [sessions] = await db.query(`
+            SELECT * FROM user_sessions 
+            WHERE device_id = ? AND status = 'Active'
+        `, [deviceId]);
+        const activeSession = sessions.length ? sessions[0] : null;
+
+        const riskResult = calculateRisk({
+            device,
+            recentLoginHistory: recentLogins,
+            activeSession,
+            currentRequest: {} // For admin view, we don't have current request fingerprint
+        });
+
+        return res.status(200).json({ success: true, riskScore: riskResult.riskScore, factors: riskResult.factors });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to fetch device risk." });
+    }
+};
+
 exports.updateDeviceStatus = async (req, res) => {
     try {
         const deviceId = req.params.id;
