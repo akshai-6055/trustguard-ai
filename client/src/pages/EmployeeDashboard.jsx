@@ -134,6 +134,11 @@ const EmployeeDashboard = () => {
   const displayName = user?.full_name || dashboardData?.user?.full_name || "John Doe";
   const displayRole = user?.role_name || (user?.role_id === 1 ? "Administrator" : "Employee");
 
+  const trustScore = dashboardData?.trustScore !== undefined ? dashboardData.trustScore : (loading ? "..." : 100);
+  const trustStatus = trustScore >= 80 ? "Trusted" : trustScore >= 50 ? "Pending" : "Blocked";
+  const riskLevel = trustScore >= 80 ? "Low Risk" : trustScore >= 50 ? "Medium Risk" : "High Risk";
+  const statusColorClass = trustScore >= 80 ? "success" : trustScore >= 50 ? "warning" : "danger";
+
   return (
     <div className="min-vh-100 d-flex flex-column bg-light font-sans" style={{ backgroundColor: "#f4f6fa" }}>
       {/* ========================================================================= */}
@@ -245,12 +250,12 @@ const EmployeeDashboard = () => {
             </Link>
 
             {/* Login History Link */}
-            <a
-              href="#login-history"
+            <Link
+              to="/login-history"
               className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
             >
               <i className="bi bi-clock-history fs-5"></i> Login History
-            </a>
+            </Link>
 
             {/* Security Notifications Link */}
             <a
@@ -311,19 +316,19 @@ const EmployeeDashboard = () => {
               <div className="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
                 <div className="card-body p-2 d-flex flex-column justify-content-between">
                   <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div className="rounded-3 p-2 d-flex align-items-center justify-content-center text-primary" style={{ background: "#eef4ff" }}>
-                      <i className="bi bi-shield-fill fs-4" style={{ color: "#0047ab" }}></i>
+                    <div className={`rounded-3 p-2 d-flex align-items-center justify-content-center text-${statusColorClass === 'success' ? 'primary' : statusColorClass}`} style={{ background: statusColorClass === 'success' ? '#eef4ff' : '' }}>
+                      <i className="bi bi-shield-fill fs-4" style={{ color: statusColorClass === 'success' ? '#0047ab' : '' }}></i>
                     </div>
-                    <span className="fw-bold fs-2 text-primary" style={{ color: "#0047ab" }}>92%</span>
+                    <span className={`fw-bold fs-2 text-${statusColorClass === 'success' ? 'primary' : statusColorClass}`} style={{ color: statusColorClass === 'success' ? '#0047ab' : '' }}>{trustScore}{trustScore !== "..." ? "%" : ""}</span>
                   </div>
                   <div>
-                    <div className="fw-bold text-dark small mb-1">Trust Score: 92%</div>
+                    <div className="fw-bold text-dark small mb-1">Trust Score: {trustScore}{trustScore !== "..." ? "%" : ""}</div>
                     <div className="mb-2">
-                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style={{ fontSize: "0.7rem" }}>
-                        Status: Trusted
+                      <span className={`badge bg-${statusColorClass}-subtle text-${statusColorClass} border border-${statusColorClass}-subtle rounded-pill px-2 py-1`} style={{ fontSize: "0.7rem" }}>
+                        Status: {trustStatus}
                       </span>
                     </div>
-                    <span className="text-secondary" style={{ fontSize: "0.75rem" }}>Risk Level: Low Risk</span>
+                    <span className="text-secondary" style={{ fontSize: "0.75rem" }}>Risk Level: {riskLevel}</span>
                   </div>
                 </div>
               </div>
@@ -447,9 +452,9 @@ const EmployeeDashboard = () => {
               <div id="login-history" className="card border-0 shadow-sm rounded-4 bg-white p-4">
                 <div className="d-flex align-items-center justify-content-between mb-3">
                   <h5 className="fw-bold text-dark mb-0">Recent Login Activity</h5>
-                  <a href="#view-all" className="small fw-semibold text-decoration-none" style={{ color: "#0047ab" }}>
+                  <Link to="/login-history" className="small fw-semibold text-decoration-none" style={{ color: "#0047ab" }}>
                     View All
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="table-responsive">

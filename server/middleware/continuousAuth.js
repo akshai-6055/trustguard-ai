@@ -76,6 +76,8 @@ const continuousAuth = (resourceName, permissionId) => async (req, res, next) =>
             else if (liveTrustScore >= 50) liveDeviceStatus = 'Pending';
             else liveDeviceStatus = 'Blocked';
         }
+        
+        req.liveTrustScore = liveTrustScore;
 
         // 7. Check PBAC Policy
         const policy = await continuousAuthModel.findApplicablePolicy(

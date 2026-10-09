@@ -282,6 +282,12 @@ exports.getDashboard = async (req, res) => {
                 userId
             );
 
+        if (req.liveTrustScore !== undefined) {
+            dashboardData.trustScore = req.liveTrustScore;
+        } else {
+            dashboardData.trustScore = 100; // default if not set
+        }
+
 
         if (!dashboardData) {
             return res.status(404).json({
@@ -313,6 +319,28 @@ exports.getDashboard = async (req, res) => {
             success: false,
             message:
                 "Failed to retrieve dashboard data.",
+            error: error.message
+        });
+    }
+};
+
+// ============================================================
+// Get User Login History
+// ============================================================
+exports.getLoginHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const loginHistory = await userModel.getLoginHistory(userId);
+        
+        return res.status(200).json({
+            success: true,
+            loginHistory
+        });
+    } catch (error) {
+        console.error("❌ Login History error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve login history.",
             error: error.message
         });
     }
