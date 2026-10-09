@@ -21,6 +21,7 @@ router.delete("/users/:id", adminController.deleteUser);
 
 // Device Management Routes
 router.get("/devices", authorizePermissions("VIEW_DEVICES"), adminController.getAllDevices);
+router.get("/devices/:id/risk", authorizePermissions("VIEW_DEVICES"), adminController.getDeviceRisk);
 router.put("/devices/:id/status", authorizePermissions("APPROVE_DEVICE"), adminController.updateDeviceStatus);
 router.delete("/devices/:id", adminController.deleteDevice);
 

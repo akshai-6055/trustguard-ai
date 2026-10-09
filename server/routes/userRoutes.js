@@ -11,7 +11,9 @@ router.get("/profile", userController.getProfile);
 router.put("/profile", userController.updateProfile);
 router.put("/change-password", userController.changePassword);
 
+const continuousAuth = require("../middleware/continuousAuth");
+
 // Employee Dashboard route
-router.get("/dashboard", userController.getDashboard);
+router.get("/dashboard", continuousAuth("EmployeeDashboard", 2), userController.getDashboard);
 
 module.exports = router;
