@@ -227,6 +227,20 @@ const getEmployeeDashboardData = async (userId) => {
 
 
     // --------------------------------------------------------
+    // Get latest security notifications
+    // --------------------------------------------------------
+    const [notifResults] = await db.query(
+        `
+        SELECT log_id as id, action, module, description, created_at
+        FROM audit_logs
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 3
+        `,
+        [userId]
+    );
+
+    // --------------------------------------------------------
     // Return dashboard data
     // --------------------------------------------------------
     return {
@@ -234,6 +248,7 @@ const getEmployeeDashboardData = async (userId) => {
         trustedDevices,
         lastLogin,
         recentActivity,
+        recentNotifications: notifResults,
 
         currentSession: {
             status: "Active",
@@ -493,6 +508,26 @@ const getLoginHistory = async (userId) => {
 };
 
 // ============================================================
+// Get Security Notifications from Audit Logs
+// ============================================================
+const getNotifications = async (userId) => {
+    const sql = `
+        SELECT
+            log_id as id,
+            action,
+            module,
+            description,
+            created_at
+        FROM audit_logs
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 50
+    `;
+    const [rows] = await db.query(sql, [userId]);
+    return rows;
+};
+
+// ============================================================
 // Export all functions
 // ============================================================
 module.exports = {
@@ -510,5 +545,6 @@ module.exports = {
     updateUserAdmin,
     deleteUser,
     logLoginAttempt,
-    getLoginHistory
+    getLoginHistory,
+    getNotifications
 };

@@ -19,4 +19,7 @@ router.get("/dashboard", continuousAuth("EmployeeDashboard", 2), userController.
 // User Login History route
 router.get("/login-history", userController.getLoginHistory);
 
+// Security Notifications route
+router.get("/notifications", userController.getNotifications);
+
 module.exports = router;

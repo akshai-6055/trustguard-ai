@@ -12,6 +12,7 @@ import TrustedDevices from "./pages/TrustedDevices.jsx";
 import PolicyManagement from "./pages/PolicyManagement.jsx";
 import ContinuousAuthentication from "./pages/ContinuousAuthentication.jsx";
 import LoginHistory from "./pages/LoginHistory.jsx";
+import SecurityNotifications from "./pages/SecurityNotifications.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
 import UserManagement from "./pages/admin/UserManagement.jsx";
@@ -147,6 +148,14 @@ function App() {
         element={
           <ProtectedRoute>
             <LoginHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/security-notifications"
+        element={
+          <ProtectedRoute>
+            <SecurityNotifications />
           </ProtectedRoute>
         }
       />

@@ -88,13 +88,14 @@ const EmployeeSidebar = () => {
         </Link>
 
         {/* Security Notifications */}
-        <a
-          href="#security-notifications"
-          className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary w-100"
+        <Link
+          to="/security-notifications"
+          className={linkClass("/security-notifications")}
+          style={linkStyle("/security-notifications")}
         >
           <i className="bi bi-bell fs-5"></i>
           Security Notifications
-        </a>
+        </Link>
 
         {/* Active Sessions */}
         <a

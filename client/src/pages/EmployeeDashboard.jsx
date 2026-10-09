@@ -159,12 +159,14 @@ const EmployeeDashboard = () => {
           {/* Right Header Actions */}
           <div className="d-flex align-items-center gap-3 ms-auto">
             {/* Notification Icon */}
-            <button className="btn btn-link text-secondary position-relative p-1 border-0">
+            <Link to="/security-notifications" className="btn btn-link text-secondary position-relative p-1 border-0">
               <i className="bi bi-bell fs-5"></i>
-              <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                <span className="visually-hidden">New alerts</span>
-              </span>
-            </button>
+              {dashboardData?.recentNotifications?.length > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                  <span className="visually-hidden">New alerts</span>
+                </span>
+              )}
+            </Link>
 
             {/* User Profile Info */}
             <div className="d-flex align-items-center gap-2 border-start ps-3 me-2">
@@ -258,12 +260,12 @@ const EmployeeDashboard = () => {
             </Link>
 
             {/* Security Notifications Link */}
-            <a
-              href="#security-notifications"
+            <Link
+              to="/security-notifications"
               className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary"
             >
               <i className="bi bi-bell fs-5"></i> Security Notifications
-            </a>
+            </Link>
 
             {/* Active Sessions Link */}
           </div>
@@ -583,63 +585,58 @@ const EmployeeDashboard = () => {
             <div className="d-flex align-items-center justify-content-between mb-3">
               <div className="d-flex align-items-center gap-2">
                 <h5 className="fw-bold text-dark mb-0">Security Notifications</h5>
-                <span className="badge bg-danger rounded-circle p-1" style={{ width: "18px", height: "18px", fontSize: "0.65rem" }}>
-                  1
-                </span>
+                {dashboardData?.recentNotifications?.length > 0 && (
+                  <span className="badge bg-danger rounded-circle p-1" style={{ width: "18px", height: "18px", fontSize: "0.65rem" }}>
+                    {dashboardData.recentNotifications.length}
+                  </span>
+                )}
               </div>
-              <a href="#mark-read" className="small fw-semibold text-decoration-none" style={{ color: "#0047ab" }}>
-                Mark all as read
-              </a>
+              <Link to="/security-notifications" className="small fw-semibold text-decoration-none" style={{ color: "#0047ab" }}>
+                View all
+              </Link>
             </div>
 
             <div className="row g-3">
-              {/* Notification 1 */}
-              <div className="col-12 col-md-4">
-                <div className="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-check-circle-fill text-success fs-5"></i>
-                    <div>
-                      <div className="fw-bold text-dark small">New device verified</div>
-                      <span className="text-secondary d-block" style={{ fontSize: "0.75rem" }}>2 hours ago</span>
-                    </div>
-                  </div>
-                  <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style={{ fontSize: "0.65rem" }}>
-                    LOW
-                  </span>
-                </div>
-              </div>
+              {dashboardData?.recentNotifications?.length > 0 ? (
+                dashboardData.recentNotifications.map(notif => {
+                  const actionLower = notif.action.toLowerCase();
+                  let icon = "bi-check-circle-fill";
+                  let color = "success";
+                  let level = "LOW";
+                  
+                  if (actionLower.includes("fail") || actionLower.includes("anomaly") || actionLower.includes("block")) {
+                    icon = "bi-exclamation-triangle-fill"; color = "danger"; level = "HIGH";
+                  } else if (actionLower.includes("decay") || actionLower.includes("warn")) {
+                    icon = "bi-exclamation-circle-fill"; color = "warning"; level = "MEDIUM";
+                  }
 
-              {/* Notification 2 */}
-              <div className="col-12 col-md-4">
-                <div className="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-check-circle-fill text-success fs-5"></i>
-                    <div>
-                      <div className="fw-bold text-dark small">Password updated</div>
-                      <span className="text-secondary d-block" style={{ fontSize: "0.75rem" }}>Yesterday, 14:20</span>
+                  return (
+                    <div key={notif.id} className="col-12 col-md-4">
+                      <div className={`p-3 bg-${color}-subtle bg-opacity-25 rounded-3 border border-${color}-subtle d-flex align-items-center justify-content-between h-100`}>
+                        <div className="d-flex align-items-center gap-2">
+                          <i className={`bi ${icon} text-${color} fs-5`}></i>
+                          <div>
+                            <div className="fw-bold text-dark small">{notif.action}</div>
+                            <span className="text-secondary d-block" style={{ fontSize: "0.75rem" }}>
+                              {new Date(notif.created_at).toLocaleString("en-GB", { 
+                                day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" 
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`badge bg-${color === "warning" ? "warning text-dark" : color} px-2 py-1`} style={{ fontSize: "0.65rem" }}>
+                          {level}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style={{ fontSize: "0.65rem" }}>
-                    LOW
-                  </span>
+                  );
+                })
+              ) : (
+                <div className="col-12 text-center py-3 text-secondary">
+                  <i className="bi bi-bell-slash fs-3 d-block mb-2 text-muted"></i>
+                  No recent notifications.
                 </div>
-              </div>
-
-              {/* Notification 3 */}
-              <div className="col-12 col-md-4">
-                <div className="p-3 bg-danger-subtle bg-opacity-25 rounded-3 border border-danger-subtle d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
-                    <div>
-                      <div className="fw-bold text-dark small">Failed login attempt</div>
-                      <span className="text-secondary d-block" style={{ fontSize: "0.75rem" }}>26 Jul, 18:45 • Unknown Device</span>
-                    </div>
-                  </div>
-                  <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: "0.65rem" }}>
-                    HIGH
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

@@ -345,3 +345,25 @@ exports.getLoginHistory = async (req, res) => {
         });
     }
 };
+
+// ============================================================
+// Get User Security Notifications
+// ============================================================
+exports.getNotifications = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const notifications = await userModel.getNotifications(userId);
+        
+        return res.status(200).json({
+            success: true,
+            notifications
+        });
+    } catch (error) {
+        console.error("❌ Notifications error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve notifications.",
+            error: error.message
+        });
+    }
+};
