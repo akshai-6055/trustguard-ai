@@ -1,13 +1,13 @@
 import React from "react";
-import Navbar from "../components/Navbar";
+import DashboardNavbar from "../components/DashboardNavbar";
 import EmployeeSidebar from "../components/EmployeeSidebar";
 
 const DashboardLayout = ({ children, title, subtitle }) => {
   return (
-    <div className="min-vh-100 bg-light d-flex flex-column">
+    <div className="min-vh-100 bg-light d-flex flex-column" style={{ backgroundColor: "#f4f6fa" }}>
 
       {/* TOP NAVBAR */}
-      <Navbar transparent={false} />
+      <DashboardNavbar />
 
       {/* SIDEBAR + MAIN CONTENT */}
       <div className="d-flex flex-grow-1">
