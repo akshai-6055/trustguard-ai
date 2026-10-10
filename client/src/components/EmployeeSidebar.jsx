@@ -97,31 +97,11 @@ const EmployeeSidebar = () => {
           Security Notifications
         </Link>
 
-        {/* Active Sessions */}
-        <a
-          href="#active-sessions"
-          className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-semibold text-secondary w-100"
-        >
-          <i className="bi bi-activity fs-5"></i>
-          Active Sessions
-        </a>
+
 
       </div>
 
-      {/* Bottom Section */}
-      <div className="pt-3 border-top">
 
-        {/* Change Password */}
-        <Link
-          to="/change-password"
-          className={linkClass("/change-password")}
-          style={linkStyle("/change-password")}
-        >
-          <i className="bi bi-key-fill fs-5"></i>
-          Change Password
-        </Link>
-
-      </div>
     </aside>
   );
 };
