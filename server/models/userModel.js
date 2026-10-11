@@ -241,6 +241,15 @@ const getEmployeeDashboardData = async (userId) => {
     );
 
     // --------------------------------------------------------
+    // Get average trust score
+    // --------------------------------------------------------
+    const [scoreResults] = await db.query(
+        `SELECT ROUND(AVG(trust_score)) as avg_score FROM devices WHERE user_id = ?`,
+        [userId]
+    );
+    const trustScore = scoreResults.length > 0 && scoreResults[0].avg_score !== null ? Number(scoreResults[0].avg_score) : 100;
+
+    // --------------------------------------------------------
     // Return dashboard data
     // --------------------------------------------------------
     return {
@@ -249,6 +258,7 @@ const getEmployeeDashboardData = async (userId) => {
         lastLogin,
         recentActivity,
         recentNotifications: notifResults,
+        trustScore,
 
         currentSession: {
             status: "Active",
@@ -484,6 +494,22 @@ const logLoginAttempt = async (userId, deviceName, browser, status, location = '
         VALUES (?, ?, ?, ?, NOW(), ?)
     `;
     const [result] = await db.query(sql, [userId || null, deviceName || 'Unknown Device', browser || 'Unknown Browser', location || 'Unknown', status]);
+    
+    // Log failed attempts to audit_logs for user security notifications
+    if (userId && (status === 'Failed' || status === 'Blocked')) {
+        const action = status === 'Blocked' ? 'Blocked Login Attempt' : 'Failed Login Attempt';
+        const description = `A login attempt failed on ${deviceName || 'Unknown Device'} from ${location || 'Unknown'}.`;
+        const auditSql = `
+            INSERT INTO audit_logs (user_id, action, module, description, ip_address, created_at)
+            VALUES (?, ?, ?, ?, 'System', NOW())
+        `;
+        try {
+            await db.query(auditSql, [userId, action, 'Authentication', description]);
+        } catch (err) {
+            console.error("Failed to insert audit log for failed login", err);
+        }
+    }
+
     return result;
 };
 

@@ -47,12 +47,26 @@ exports.updateUserStatus = async (req, res) => {
     try {
         const userId = req.params.id;
         const { status } = req.body;
+        const db = require("../config/db");
         
         if (!status) {
             return res.status(400).json({ success: false, message: "Status is required." });
         }
         
         await userModel.updateUserStatus(userId, status);
+
+        // --- Notification logic ---
+        const action = status === 'Blocked' ? 'Account Blocked' : (status === 'Active' ? 'Account Unblocked' : `Account Status: ${status}`);
+        const description = status === 'Blocked' 
+            ? 'Your account was blocked by an administrator.' 
+            : `Your account status was changed to ${status} by an administrator.`;
+            
+        await db.query(
+            "INSERT INTO audit_logs (user_id, action, module, description) VALUES (?, ?, ?, ?)",
+            [userId, action, 'Account Management', description]
+        );
+        // --------------------------
+
         return res.status(200).json({ success: true, message: `User status updated to ${status}.` });
     } catch (err) {
         return res.status(500).json({ success: false, message: "Failed to update user status.", error: err.message });
@@ -186,12 +200,34 @@ exports.updateDeviceStatus = async (req, res) => {
     try {
         const deviceId = req.params.id;
         const { status } = req.body;
+        const db = require("../config/db");
         
         if (!status) {
             return res.status(400).json({ success: false, message: "Status is required." });
         }
+
+        // Find device to get user_id and device_name for notification
+        const [devices] = await db.query("SELECT user_id, device_name FROM devices WHERE id = ?", [deviceId]);
+        if (devices.length === 0) {
+            return res.status(404).json({ success: false, message: "Device not found." });
+        }
+        const device = devices[0];
+        const userId = device.user_id;
         
         await deviceModel.updateDeviceStatusAdmin(deviceId, status);
+
+        // --- Notification logic ---
+        const action = status === 'Blocked' ? 'Device Blocked' : (status === 'Trusted' ? 'Device Approved' : `Device Status: ${status}`);
+        const description = status === 'Blocked' 
+            ? `Your device '${device.device_name}' was blocked by an administrator.` 
+            : `Your device '${device.device_name}' was marked as ${status} by an administrator.`;
+            
+        await db.query(
+            "INSERT INTO audit_logs (user_id, action, module, description) VALUES (?, ?, ?, ?)",
+            [userId, action, 'Device Management', description]
+        );
+        // --------------------------
+
         return res.status(200).json({ success: true, message: `Device status updated to ${status}.` });
     } catch (err) {
         return res.status(500).json({ success: false, message: "Failed to update device status.", error: err.message });
