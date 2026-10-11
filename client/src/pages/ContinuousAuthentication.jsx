@@ -337,33 +337,6 @@ const ContinuousAuthentication = () => {
         </div>
       )}
 
-      {/* Top Breadcrumb Navigation */}
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
-        <div>
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb mb-1 small">
-              <li className="breadcrumb-item">
-                <Link to="/dashboard" className="text-decoration-none" style={{ color: "#0047ab" }}>
-                  Dashboard
-                </Link>
-              </li>
-              <li className="breadcrumb-item active" aria-current="page">
-                Continuous Authentication
-              </li>
-            </ol>
-          </nav>
-          <span className="text-secondary small">
-            Zero Trust Engine performs real-time policy evaluation on each request.
-          </span>
-        </div>
-
-        <div>
-          <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill small fw-semibold">
-            <i className="bi bi-shield-check me-1"></i> Module 4: Live Access Verification
-          </span>
-        </div>
-      </div>
-
       {/* ========================================================================= */}
       {/* 1. SECURITY STATUS CARDS (4-METRIC ROW)                                    */}
       {/* ========================================================================= */}
