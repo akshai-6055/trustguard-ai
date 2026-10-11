@@ -7,7 +7,7 @@ const Register = () => {
   // Form field states
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [department, setDepartment] = useState("");
+  const [role] = useState("Employee");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -93,7 +93,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
       full_name: cleanFullName,
       email: cleanEmail,
       password,
-      role_id: department === "Admin" ? 1 : 2 // Map role to DB role_id
+      role_id: 2 // Self-registration assigns Employee role (role_id: 2)
     };
 
     const result = await register(userData);
@@ -243,25 +243,34 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                   </div>
                 </div>
 
-                {/* Department / Role dropdown field */}
+                {/* User Role read-only field */}
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold text-dark">Department / Role</label>
-                  {/* Input group with building icon */}
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label htmlFor="userRole" className="form-label small fw-semibold text-dark mb-0">User Role</label>
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle small fw-medium">
+                      Assigned
+                    </span>
+                  </div>
+                  {/* Input group with person badge icon */}
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-muted">
-                      {/* Building icon for department field */}
-                      <i className="bi bi-building-fill"></i>
+                      {/* Badge icon for role field */}
+                      <i className="bi bi-person-badge-fill"></i>
                     </span>
-                    <select
-                      className="form-select form-select-lg bg-light border-start-0 fs-6"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      required
-                    >
-                      <option value="">Select department</option>
-                      <option value="Admin">Admin</option>
-                      <option value="Employee">Employee</option>
-                    </select>
+                    <input
+                      type="text"
+                      id="userRole"
+                      name="role"
+                      className="form-control form-control-lg bg-light border-start-0 fs-6 text-dark"
+                      value={role}
+                      readOnly
+                      aria-label="User Role"
+                      title="Self-registration is restricted to the Employee role"
+                      style={{ cursor: "default" }}
+                    />
+                  </div>
+                  <div className="form-text small text-muted">
+                    Registration is provisioned for Employees.
                   </div>
                 </div>
 
