@@ -242,14 +242,14 @@
               "raw": "{\"email\": \"test_admin@trustguard.local\", \"password\": \"adminpassword123\"}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
+              "raw": "{{baseUrl}}/api/auth/admin-login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "auth",
-                "login"
+                "admin-login"
               ]
             }
           }

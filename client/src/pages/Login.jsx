@@ -27,7 +27,7 @@ const Login = () => {
       const userRoleName = result.user?.role_name?.toLowerCase();
 
       if (userRole === 1 || userRoleName === "admin" || userRoleName === "administrator") {
-        navigate("/admin/dashboard");
+        setErrorMessage("Administrator accounts must sign in through the Admin Portal.");
       } else {
         navigate("/dashboard");
       }

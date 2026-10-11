@@ -135,7 +135,7 @@ def test_admin_missing_permission_create_policy(admin_login):
     # Clear local storage to force logout
     driver.get(FRONTEND_URL)
     driver.execute_script("localStorage.clear(); sessionStorage.clear();")
-    driver.get(f"{FRONTEND_URL}/login")
+    driver.get(f"{FRONTEND_URL}/admin/login")
     
     # Re-login
     email_input = WebDriverWait(driver, DEFAULT_TIMEOUT).until(

@@ -65,7 +65,7 @@ def admin_login(driver):
     """Logs in as the test Admin and returns an authenticated driver."""
     driver.get(FRONTEND_URL)
     driver.execute_script("localStorage.clear(); sessionStorage.clear();")
-    driver.get(f"{FRONTEND_URL}/login")
+    driver.get(f"{FRONTEND_URL}/admin/login")
     
     email_input = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))

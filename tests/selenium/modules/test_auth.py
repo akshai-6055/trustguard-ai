@@ -26,7 +26,7 @@ def test_employee_registration_valid(driver):
     inputs = driver.find_elements(By.CSS_SELECTOR, "input")
     name_input = inputs[0]
     email_input = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
-    select_role = driver.find_element(By.CSS_SELECTOR, "select")
+    select_roles = driver.find_elements(By.CSS_SELECTOR, "select")
     passwords = driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
     pass_input = passwords[0]
     confirm_pass_input = passwords[1]
@@ -37,11 +37,15 @@ def test_employee_registration_valid(driver):
     name_input.send_keys("QA Employee")
     email_input.send_keys("QA_employee@trustguard.local")
     
-    # Select Employee role
-    for option in select_role.find_elements(By.TAG_NAME, "option"):
-        if option.text == "Employee":
-            option.click()
-            break
+    # Select or verify Employee role
+    if select_roles:
+        for option in select_roles[0].find_elements(By.TAG_NAME, "option"):
+            if option.text == "Employee":
+                option.click()
+                break
+    else:
+        role_input = driver.find_element(By.CSS_SELECTOR, "input[value='Employee']")
+        assert role_input is not None
             
     pass_input.send_keys("TestPass123!")
     confirm_pass_input.send_keys("TestPass123!")
@@ -74,7 +78,7 @@ def test_registration_duplicate_email(driver):
     inputs = driver.find_elements(By.CSS_SELECTOR, "input")
     name_input = inputs[0]
     email_input = driver.find_element(By.CSS_SELECTOR, "input[type='email']")
-    select_role = driver.find_element(By.CSS_SELECTOR, "select")
+    select_roles = driver.find_elements(By.CSS_SELECTOR, "select")
     passwords = driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
     pass_input = passwords[0]
     confirm_pass_input = passwords[1]
@@ -85,10 +89,11 @@ def test_registration_duplicate_email(driver):
     name_input.send_keys("QA Duplicate")
     email_input.send_keys(ADMIN_EMAIL)
     
-    for option in select_role.find_elements(By.TAG_NAME, "option"):
-        if option.text == "Employee":
-            option.click()
-            break
+    if select_roles:
+        for option in select_roles[0].find_elements(By.TAG_NAME, "option"):
+            if option.text == "Employee":
+                option.click()
+                break
             
     pass_input.send_keys("TestPass123!")
     confirm_pass_input.send_keys("TestPass123!")
@@ -109,7 +114,7 @@ def test_login_admin(driver):
     """Login with valid Admin credentials -> redirected to Admin Dashboard."""
     driver.get(FRONTEND_URL)
     driver.execute_script("localStorage.clear(); sessionStorage.clear();")
-    driver.get(f"{FRONTEND_URL}/login")
+    driver.get(f"{FRONTEND_URL}/admin/login")
     
     email_input = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))
@@ -131,6 +136,28 @@ def test_login_admin(driver):
     WebDriverWait(driver, DEFAULT_TIMEOUT).until(
         EC.url_contains("/login")
     )
+
+def test_admin_blocked_on_user_login(driver):
+    """Admin trying to log in via user login portal -> rejected with clear error."""
+    driver.get(FRONTEND_URL)
+    driver.execute_script("localStorage.clear(); sessionStorage.clear();")
+    driver.get(f"{FRONTEND_URL}/login")
+    
+    email_input = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))
+    )
+    password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+    submit_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+    
+    email_input.send_keys(ADMIN_EMAIL)
+    password_input.send_keys(ADMIN_PASSWORD)
+    driver.execute_script("arguments[0].click();", submit_btn)
+    
+    error_msg = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".alert-danger"))
+    )
+    assert error_msg.is_displayed()
+    assert "admin" in error_msg.text.lower()
 
 def test_login_employee(driver):
     """Login with valid Employee credentials -> redirected to Employee Dashboard."""
@@ -207,7 +234,7 @@ def test_logout(driver):
     """Logout -> session/token cleared, redirected to login, protected pages no longer accessible."""
     driver.get(FRONTEND_URL)
     driver.execute_script("localStorage.clear(); sessionStorage.clear();")
-    driver.get(f"{FRONTEND_URL}/login")
+    driver.get(f"{FRONTEND_URL}/admin/login")
     
     email_input = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))

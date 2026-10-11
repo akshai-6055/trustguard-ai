@@ -180,6 +180,22 @@ exports.login = async (req, res) => {
                 ? userResults[0]
                 : user;
 
+        const roleName =
+            fullUser.role_name ||
+            (
+                fullUser.role_id === 1
+                    ? "Admin"
+                    : "Employee"
+            );
+
+        // Disallow Admin users from standard user login
+        if (fullUser.role_id === 1 || roleName.toLowerCase() === "admin" || roleName.toLowerCase() === "administrator") {
+            await userModel.logLoginAttempt(fullUser.id, device_name, browser, "Failed", location);
+            return res.status(403).json({
+                success: false,
+                message: "Administrator accounts must sign in through the Admin Portal."
+            });
+        }
 
         // =====================================================
         // STEP 6: DEVICE RECOGNITION
@@ -225,14 +241,6 @@ exports.login = async (req, res) => {
         // =====================================================
         // STEP 7: CREATE JWT
         // =====================================================
-
-        const roleName =
-            fullUser.role_name ||
-            (
-                fullUser.role_id === 1
-                    ? "Admin"
-                    : "Employee"
-            );
 
 
         const [permsRows] = await db.query(
