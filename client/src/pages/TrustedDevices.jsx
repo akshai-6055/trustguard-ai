@@ -8,8 +8,15 @@ import {
   getOSName,
   getDeviceName
 } from "../utils/deviceFingerprint";
+import { useAuth } from "../context/AuthContext";
 
 const TrustedDevices = () => {
+  const { user } = useAuth();
+  const isAdmin =
+    user?.role_id === 1 ||
+    user?.role_name?.toLowerCase() === "admin" ||
+    user?.role_name?.toLowerCase() === "administrator";
+
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -64,6 +71,7 @@ const TrustedDevices = () => {
 
   // Handle Open Add Device Modal & Auto Fingerprinting
   const handleOpenAddModal = async () => {
+    if (!isAdmin) return;
     setErrorMessage("");
     setSuccessMessage("");
     setIsDetecting(true);
@@ -93,6 +101,10 @@ const TrustedDevices = () => {
   // Submit Add Device
   const handleAddDeviceSubmit = async (e) => {
     e.preventDefault();
+    if (!isAdmin) {
+      setErrorMessage("Employees are not permitted to manually add devices.");
+      return;
+    }
     if (!newDeviceName.trim()) {
       setErrorMessage("Please enter a device name.");
       return;
@@ -315,16 +327,18 @@ const TrustedDevices = () => {
           </span>
         </div>
 
-        <div>
-          <button
-            id="btn-add-device"
-            onClick={handleOpenAddModal}
-            className="btn text-white fw-semibold rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm"
-            style={{ background: "#0047ab" }}
-          >
-            <i className="bi bi-plus-lg"></i> + Add Device
-          </button>
-        </div>
+        {isAdmin && (
+          <div>
+            <button
+              id="btn-add-device"
+              onClick={handleOpenAddModal}
+              className="btn text-white fw-semibold rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm"
+              style={{ background: "#0047ab" }}
+            >
+              <i className="bi bi-plus-lg"></i> Add Device
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -438,17 +452,21 @@ const TrustedDevices = () => {
             </div>
             <h4 className="fw-bold text-dark mb-2">No devices registered</h4>
             <p className="text-secondary small mb-4 mx-auto" style={{ maxWidth: "420px" }}>
-              Your devices will appear here after they are registered. Register your current browser to enable continuous adaptive Zero Trust protection.
+              {isAdmin
+                ? "Your devices will appear here after they are registered. Register your current browser to enable continuous adaptive Zero Trust protection."
+                : "Your devices are recognized automatically when you sign in. Once authenticated, your trusted endpoint will appear here."}
             </p>
-            <div>
-              <button
-                onClick={handleOpenAddModal}
-                className="btn text-white fw-semibold rounded-3 px-4 py-2 shadow-sm"
-                style={{ background: "#0047ab" }}
-              >
-                <i className="bi bi-plus-lg me-1"></i> Add Device
-              </button>
-            </div>
+            {isAdmin && (
+              <div>
+                <button
+                  onClick={handleOpenAddModal}
+                  className="btn text-white fw-semibold rounded-3 px-4 py-2 shadow-sm"
+                  style={{ background: "#0047ab" }}
+                >
+                  <i className="bi bi-plus-lg me-1"></i> Add Device
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           /* Device Cards Grid */
@@ -594,7 +612,7 @@ const TrustedDevices = () => {
       {/* ========================================================================= */}
       {/* 1. ADD DEVICE MODAL (AUTOMATIC FINGERPRINTING)                             */}
       {/* ========================================================================= */}
-      {showAddModal && (
+      {showAddModal && isAdmin && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">

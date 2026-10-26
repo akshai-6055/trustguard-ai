@@ -82,9 +82,6 @@ const Login = () => {
           <div className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-1">
               <label className="form-label small fw-semibold text-dark mb-0">Password</label>
-              <a href="#forgot" className="small fw-semibold text-decoration-none" style={{ color: "#0047ab" }}>
-                Forgot Password?
-              </a>
             </div>
             <div className="input-group">
               <span className="input-group-text bg-light border-end-0 text-muted">

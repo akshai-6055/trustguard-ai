@@ -1,35 +1,23 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const AdminNavbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/admin/login");
+  };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-2 px-4 d-flex justify-content-between align-items-center">
-      {/* Global Search (mockup) */}
-      <div className="input-group" style={{ maxWidth: "400px" }}>
-        <span className="input-group-text bg-light border-end-0 text-secondary">
-          <i className="bi bi-search"></i>
-        </span>
-        <input
-          type="text"
-          className="form-control bg-light border-start-0 fs-6"
-          placeholder="Global system search..."
-        />
-      </div>
+    <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-2 px-4 d-flex justify-content-end align-items-center">
 
       {/* Action Items */}
-      <div className="d-flex align-items-center gap-4">
-        {/* Notifications */}
-        <div className="position-relative cursor-pointer text-secondary">
-          <i className="bi bi-bell fs-5"></i>
-          <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-            <span className="visually-hidden">New alerts</span>
-          </span>
-        </div>
-
+      <div className="d-flex align-items-center gap-3">
         {/* User Profile */}
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 pe-1">
           <div className="d-flex flex-column text-end" style={{ lineHeight: "1.1" }}>
             <span className="fw-semibold text-dark small">{user?.full_name || "Admin"}</span>
             <span className="text-primary fw-bold" style={{ fontSize: "0.65rem", textTransform: "uppercase" }}>
@@ -43,6 +31,16 @@ const AdminNavbar = () => {
             {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "A"}
           </div>
         </div>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleLogout}
+          className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 ms-2 px-3 py-1 rounded-3 fw-medium"
+          title="Sign Out"
+        >
+          <i className="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
+        </button>
       </div>
     </nav>
   );

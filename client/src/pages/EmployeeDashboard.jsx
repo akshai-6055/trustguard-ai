@@ -519,12 +519,12 @@ const EmployeeDashboard = () => {
                   )}
                 </div>
 
-                {/* Add Device Button */}
+                {/* View Devices Button */}
                 <Link
                   to="/trusted-devices"
                   className="btn border-dashed border-2 w-100 py-2 rounded-3 text-secondary small fw-semibold mt-3 bg-light text-center text-decoration-none d-block"
                 >
-                  + Add Trusted Device
+                  View All Devices
                 </Link>
               </div>
             </div>

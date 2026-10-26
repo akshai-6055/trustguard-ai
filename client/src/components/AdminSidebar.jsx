@@ -1,11 +1,10 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const AdminSidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
 
   const isActive = (path) => location.pathname === path;
 
@@ -16,11 +15,6 @@ const AdminSidebar = () => {
 
   const iconClass = (path) =>
     `fs-5 ${isActive(path) ? "text-white" : "text-secondary"}`;
-
-  const handleLogout = () => {
-    logout();
-    navigate("/admin/login");
-  };
 
   return (
     <aside
@@ -74,11 +68,6 @@ const AdminSidebar = () => {
             </Link>
           )}
 
-          {/*<Link to="/admin/continuous-authentication" className={linkClass("/admin/continuous-authentication")}>
-            <i className={`bi bi-shield-check ${iconClass("/admin/continuous-authentication")}`}></i>
-            AI Risk Assessment
-          </Link>*/}
-          
           <Link to="/admin/security-alerts" className={linkClass("/admin/security-alerts")}>
             <i className={`bi bi-exclamation-triangle ${iconClass("/admin/security-alerts")}`}></i>
             Security Alerts
@@ -86,19 +75,14 @@ const AdminSidebar = () => {
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="pt-3 border-top d-flex flex-column">
-        <Link to="/admin/profile" className={linkClass("/admin/profile")}>
-          <i className={`bi bi-gear-fill ${iconClass("/admin/profile")}`}></i>
-          System Settings
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="btn text-start d-flex align-items-center gap-3 px-3 py-2 rounded-3 border-0 fw-medium text-danger hover-bg-light w-100"
-        >
-          <i className="bi bi-box-arrow-right fs-5 text-danger"></i>
-          Sign Out
-        </button>
+      {/* Bottom Section - Zero Trust Fleet Status */}
+      <div className="pt-3 border-top px-2">
+        <div className="d-flex align-items-center justify-content-between text-muted small">
+          <span className="fw-medium" style={{ fontSize: "0.75rem" }}>Zero-Trust Engine</span>
+          <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: "0.65rem" }}>
+            Active
+          </span>
+        </div>
       </div>
     </aside>
   );
