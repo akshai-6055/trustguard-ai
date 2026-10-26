@@ -61,6 +61,16 @@ const getDevice = async (req, res) => {
 // Register a new device
 const registerDevice = async (req, res) => {
     try {
+        // Enforce admin permission for manual device registration
+        const roleId = req.user?.role_id;
+        const roleName = (req.user?.role_name || "").toLowerCase();
+        if (roleId !== 1 && roleName !== "admin" && roleName !== "administrator") {
+            return res.status(403).json({
+                success: false,
+                message: "Employees are not permitted to manually add devices. Endpoints are registered automatically upon authentication."
+            });
+        }
+
         const userId = req.user.id;
 
         const {

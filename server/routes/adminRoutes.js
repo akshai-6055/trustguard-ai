@@ -10,6 +10,7 @@ router.use(authorizeRoles(1, "Administrator", "Admin"));
 
 // Admin Dashboard route
 router.get("/dashboard", adminController.getDashboard);
+router.get("/login-trends", adminController.getLoginTrends);
 
 // User Management Routes
 router.get("/users", adminController.getAllUsers);

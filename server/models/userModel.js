@@ -393,6 +393,29 @@ const getAdminDashboardData = async () => {
     const activeSessions = Math.max(0, Math.floor(activeUsersResult[0].count * 0.75));
 
     // --------------------------------------------------------
+    // Login trends (past 7 days and past 30 days)
+    // --------------------------------------------------------
+    const loginTrends7 = await getLoginTrends(7);
+    const loginTrends30 = await getLoginTrends(30);
+
+    // --------------------------------------------------------
+    // Risk distribution metrics
+    // --------------------------------------------------------
+    const [riskDistResult] = await db.query(`
+        SELECT 
+            SUM(CASE WHEN status = 'Trusted' THEN 1 ELSE 0 END) AS lowRisk,
+            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS mediumRisk,
+            SUM(CASE WHEN status = 'Blocked' THEN 1 ELSE 0 END) AS highRisk,
+            COUNT(*) AS totalDevices
+        FROM devices
+    `);
+    const rDist = riskDistResult[0] || {};
+    const lowRiskCount = parseInt(rDist.lowRisk || 0, 10);
+    const mediumRiskCount = parseInt(rDist.mediumRisk || 0, 10);
+    const highRiskCount = parseInt(rDist.highRisk || 0, 10);
+    const totalRiskDevices = parseInt(rDist.totalDevices || 0, 10);
+
+    // --------------------------------------------------------
     // Return admin dashboard data
     // --------------------------------------------------------
     return {
@@ -409,8 +432,73 @@ const getAdminDashboardData = async () => {
 
         recentRegistrations: recentUsers,
 
-        latestLoginActivity
+        latestLoginActivity,
+
+        loginTrends: {
+            past7Days: loginTrends7,
+            past30Days: loginTrends30
+        },
+
+        riskDistribution: {
+            lowRisk: lowRiskCount,
+            mediumRisk: mediumRiskCount,
+            highRisk: highRiskCount,
+            total: totalRiskDevices,
+            coverage: totalRiskDevices > 0 ? 100 : 0
+        }
     };
+};
+
+// ============================================================
+// Get Login Trends (Admin)
+// ============================================================
+const getLoginTrends = async (days = 30) => {
+    const [rows] = await db.query(
+        `SELECT 
+            DATE_FORMAT(login_time, '%Y-%m-%d') as log_date,
+            SUM(CASE WHEN status = 'Success' THEN 1 ELSE 0 END) as successful,
+            SUM(CASE WHEN status != 'Success' THEN 1 ELSE 0 END) as failed,
+            COUNT(*) as total
+        FROM login_history
+        WHERE login_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+        GROUP BY DATE_FORMAT(login_time, '%Y-%m-%d')
+        ORDER BY log_date ASC`,
+        [days]
+    );
+
+    const dateMap = {};
+    rows.forEach(r => {
+        dateMap[r.log_date] = {
+            date: r.log_date,
+            successful: parseInt(r.successful || 0, 10),
+            failed: parseInt(r.failed || 0, 10),
+            total: parseInt(r.total || 0, 10)
+        };
+    });
+
+    const result = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        
+        if (dateMap[dateStr]) {
+            result.push(dateMap[dateStr]);
+        } else {
+            result.push({
+                date: dateStr,
+                successful: 0,
+                failed: 0,
+                total: 0
+            });
+        }
+    }
+
+    return result;
 };
 
 
@@ -572,5 +660,6 @@ module.exports = {
     deleteUser,
     logLoginAttempt,
     getLoginHistory,
-    getNotifications
+    getNotifications,
+    getLoginTrends
 };

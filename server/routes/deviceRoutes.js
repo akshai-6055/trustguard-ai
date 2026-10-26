@@ -9,7 +9,7 @@ const {
     deleteDevice
 } = require("../controllers/deviceController");
 
-const {verifyToken} = require("../middleware/authMiddleware");
+const { verifyToken, authorizeRoles } = require("../middleware/authMiddleware");
 
 // All device routes require JWT authentication
 router.use(verifyToken);
@@ -20,8 +20,8 @@ router.get("/", getMyDevices);
 // Get one device
 router.get("/:id", getDevice);
 
-// Register a device
-router.post("/", registerDevice);
+// Register a device (Admins only; employees are recognized automatically during authentication)
+router.post("/", authorizeRoles("Administrator", "Admin"), registerDevice);
 
 // Trust or untrust a device
 router.put("/:id/trust", updateDeviceTrust);

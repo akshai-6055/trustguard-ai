@@ -95,6 +95,12 @@ const adminService = {
   getAuditLogs: async () => {
     const response = await axiosInstance.get("/admin/audit-logs");
     return response.data;
+  },
+
+  // --- Login Trends ---
+  getLoginTrends: async (days = 30) => {
+    const response = await axiosInstance.get(`/admin/login-trends?days=${days}`);
+    return response.data;
   }
 };
 

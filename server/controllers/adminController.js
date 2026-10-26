@@ -17,6 +17,16 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
+exports.getLoginTrends = async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) === 7 ? 7 : 30;
+        const trends = await userModel.getLoginTrends(days);
+        return res.status(200).json({ success: true, trends, days });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to retrieve login trends.", error: err.message });
+    }
+};
+
 // ============================================================
 // User Management
 // ============================================================
