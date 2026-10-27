@@ -350,6 +350,9 @@ const Landing = () => {
         <div className="container">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <div className="d-flex align-items-center gap-2">
+              <Link to="/admin/login" className="text-secondary small text-decoration-none d-inline-flex align-items-center gap-1 hover-white">
+                <i className="bi bi-shield-lock"></i> Admin Portal
+              </Link>
             </div>
 
             <div className="text-secondary small text-center text-md-start">

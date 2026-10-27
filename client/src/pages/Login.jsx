@@ -57,7 +57,14 @@ const Login = () => {
 
         {errorMessage && (
           <div className="alert alert-danger rounded-3 small py-2 mb-3" role="alert">
-            {errorMessage}
+            <div>{errorMessage}</div>
+            {errorMessage.includes("Admin Portal") && (
+              <div className="mt-2">
+                <Link to="/admin/login" className="btn btn-sm btn-danger fw-semibold text-white">
+                  Go to Admin Portal &rarr;
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -141,6 +148,12 @@ const Login = () => {
           <span className="text-muted small me-1">Authorized access only.</span>
           <Link to="/register" className="fw-semibold small text-decoration-none" style={{ color: "#0047ab" }}>
             Request Access
+          </Link>
+        </div>
+
+        <div className="text-center mt-3 pt-3 border-top border-light-subtle">
+          <Link to="/admin/login" className="text-secondary small text-decoration-none d-inline-flex align-items-center gap-1">
+            <i className="bi bi-shield-lock"></i> Admin Portal
           </Link>
         </div>
 
